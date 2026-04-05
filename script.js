@@ -9,6 +9,7 @@ const drawerCloseEl = document.getElementById("event-drawer-close");
 const mapViewEl = document.getElementById("map-view");
 const mapViewToggleEl = document.getElementById("map-view-toggle");
 const mapPanelTitleEl = document.getElementById("map-panel-title");
+const mapResetBtn = document.getElementById("map-reset-btn");
 const heatmapToggleWrapEl = document.getElementById("heatmap-toggle-wrap");
 const leftPanelCategoriesEl = document.getElementById("left-panel-categories");
 const leftPanelInnerEl = document.querySelector(".timeline-left-panel__inner");
@@ -774,6 +775,49 @@ function closeDrawer() {
   updateMapPanelUi();
 }
 
+function updateMapSelectionHighlight() {
+  if (!leafletMap) return;
+
+  const hasSelection = Boolean(selectedEventId);
+  const selectedEvent = hasSelection ? getEventById(selectedEventId) : null;
+  const selectedEventHasMainLocation = eventHasMainMapLocation(selectedEvent);
+
+  markerEntries.forEach(({ eventId, marker, isStep, pointKind }) => {
+    const belongsToSelectedEvent = hasSelection && eventId === selectedEventId;
+    const shouldHighlightMarker = belongsToSelectedEvent &&
+      !(selectedEventHasMainLocation && (isStep || pointKind !== "main"));
+
+    const baseRadius = isStep ? 7 : 8;
+    const dimOpacity = isStep ? 0.14 : 0.18;
+    const normalFill = isStep ? 0.75 : 0.9;
+
+    marker.setStyle({
+      radius: hasSelection ? (shouldHighlightMarker ? baseRadius + 2 : baseRadius) : baseRadius,
+      opacity: hasSelection ? (shouldHighlightMarker ? 1 : dimOpacity) : 1,
+      fillOpacity: hasSelection ? (shouldHighlightMarker ? 0.98 : dimOpacity) : normalFill,
+      weight: hasSelection ? (shouldHighlightMarker ? 3 : (isStep ? 1 : 1.5)) : (isStep ? 1.5 : 2)
+    });
+
+    if (shouldHighlightMarker && typeof marker.bringToFront === "function") {
+      marker.bringToFront();
+    }
+  });
+
+  routeEntries.forEach(({ eventId, layer }) => {
+    const belongsToSelectedEvent = hasSelection && eventId === selectedEventId;
+    const shouldHighlightRoute = belongsToSelectedEvent && !selectedEventHasMainLocation;
+
+    layer.setStyle({
+      opacity: hasSelection ? (shouldHighlightRoute ? 0.95 : 0.08) : 0.7,
+      weight: hasSelection ? (shouldHighlightRoute ? 4 : 2) : 2
+    });
+
+    if (shouldHighlightRoute && typeof layer.bringToFront === "function") {
+      layer.bringToFront();
+    }
+  });
+}
+
 function formatFullDate(ms) {
   return new Intl.DateTimeFormat("fr-FR", {
     day: "2-digit",
@@ -790,6 +834,8 @@ let leafletHeatLayer = null;
 let leafletRoutesLayer = null;
 let isHeatmapEnabled = false;
 const markersByEventId = new Map();
+const markerEntries = [];
+const routeEntries = [];
 let pendingMapFocusToken = 0;
 let lastFocusedEventId = null;
 let shouldRestoreFocusedPopup = false;
@@ -804,6 +850,10 @@ function getEventById(eventId) {
 function updateMapPanelUi() {
   const selectedEvent = selectedEventId ? getEventById(selectedEventId) : null;
   const hasSelection = Boolean(selectedEvent);
+
+  if (mapResetBtn) {
+    mapResetBtn.hidden = !hasSelection;
+  }
   const isMapVisible = !isDrawerOpen;
 
   if (mapViewToggleEl) {
@@ -849,6 +899,7 @@ function selectEvent(event, options = {}) {
 
   selectedEventId = event.id;
   renderDrawerContent(event);
+  updateMapSelectionHighlight();
 
   if (options.openDrawer !== false) {
     isDrawerOpen = true;
@@ -967,23 +1018,62 @@ function renderStats() {
     return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
 
-  const sortedEvents = normalized
-    .filter((event) => Number.isFinite(Number(event.latitude)) && Number.isFinite(Number(event.longitude)))
-    .sort((a, b) => a.startMs - b.startMs);
+  const distancePoints = normalized
+    .flatMap((event) => {
+      const points = [];
+
+      const pushPoint = (item, fallbackDate, fallbackLabel) => {
+        const lat = Number(item?.latitude);
+        const lon = Number(item?.longitude);
+
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+
+        const dateValue = item?.date ?? item?.startDate ?? fallbackDate;
+        if (!dateValue) return;
+
+        points.push({
+          lat,
+          lon,
+          date: toMs(dateValue),
+          label: item?.city || item?.title || item?.country || fallbackLabel || "Lieu",
+          country: item?.country || "",
+          city: item?.city || ""
+        });
+      };
+
+      pushPoint(event, event.startDate, event.title);
+
+      if (Array.isArray(event.steps)) {
+        event.steps.forEach((step) => pushPoint(step, event.startDate, event.title));
+      }
+
+      return points;
+    })
+    .sort((a, b) => a.date - b.date)
+    .filter((point, index, array) => {
+      if (index === 0) return true;
+      const prev = array[index - 1];
+
+      return !(
+        prev.lat === point.lat &&
+        prev.lon === point.lon &&
+        prev.date === point.date
+      );
+    });
 
   let totalDistance = 0;
   let longestDistance = 0;
   let longestTrip = null;
 
-  for (let i = 1; i < sortedEvents.length; i += 1) {
-    const prev = sortedEvents[i - 1];
-    const curr = sortedEvents[i];
+  for (let i = 1; i < distancePoints.length; i += 1) {
+    const prev = distancePoints[i - 1];
+    const curr = distancePoints[i];
 
     const d = distanceKm(
-      Number(prev.latitude),
-      Number(prev.longitude),
-      Number(curr.latitude),
-      Number(curr.longitude)
+      prev.lat,
+      prev.lon,
+      curr.lat,
+      curr.lon
     );
 
     totalDistance += d;
@@ -991,8 +1081,8 @@ function renderStats() {
     if (d > longestDistance) {
       longestDistance = d;
       longestTrip = {
-        from: prev.city || prev.country || "Lieu précédent",
-        to: curr.city || curr.country || "Lieu suivant",
+        from: prev.city || prev.country || prev.label || "Lieu précédent",
+        to: curr.city || curr.country || curr.label || "Lieu suivant",
         distance: d
       };
     }
@@ -1016,12 +1106,16 @@ function renderStats() {
 
   const countryCount = {};
   normalized.forEach((event) => {
-    if (!event.country) return;
+    const locations = getEventAndStepLocations(event);
 
-    const country = String(event.country).trim().toLowerCase();
-    if (country === "france") return;
+    locations.forEach((location) => {
+      if (!location.country) return;
 
-    countryCount[country] = (countryCount[country] || 0) + 1;
+      const country = String(location.country).trim().toLowerCase();
+      if (country === "france") return;
+
+      countryCount[country] = (countryCount[country] || 0) + 1;
+    });
   });
 
   let topCountry = null;
@@ -1210,6 +1304,11 @@ function getEventFocusZoom() {
   return Math.max(8, Math.min(10, currentZoom));
 }
 
+function eventHasMainMapLocation(event) {
+  if (!event) return false;
+  return Number.isFinite(Number(event.latitude)) && Number.isFinite(Number(event.longitude));
+}
+
 function getPopupAwareCenter(lat, lng, targetZoom) {
   if (!leafletMap) return L.latLng(lat, lng);
 
@@ -1223,23 +1322,26 @@ function getPopupAwareCenter(lat, lng, targetZoom) {
   return leafletMap.unproject(adjustedPoint, targetZoom);
 }
 
+function getEventFocusLatLngs(event, activeCategoriesSet = getActiveCategories()) {
+  const visiblePoints = getEventMapPoints(event)
+    .filter((point) => isMapPointVisible(point, activeCategoriesSet));
+
+  const mainPoint = visiblePoints.find((point) => point.kind === "main");
+
+  if (mainPoint) {
+    return [L.latLng(Number(mainPoint.latitude), Number(mainPoint.longitude))];
+  }
+
+  return visiblePoints.map((point) => L.latLng(Number(point.latitude), Number(point.longitude)));
+}
+
 function focusMapOnEvent(event) {
   if (!leafletMap) return;
 
+  const focusLatLngs = getEventFocusLatLngs(event);
+  if (!focusLatLngs.length) return;
+
   const marker = markersByEventId.get(event.id);
-  const focusPoint = marker
-    ? marker.getLatLng()
-    : (() => {
-      const lat = Number(event.latitude);
-      const lng = Number(event.longitude);
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-      return L.latLng(lat, lng);
-    })();
-
-  if (!focusPoint) return;
-
-  const targetZoom = getEventFocusZoom();
-  const targetCenter = getPopupAwareCenter(focusPoint.lat, focusPoint.lng, targetZoom);
   const focusToken = ++pendingMapFocusToken;
 
   lastFocusedEventId = event.id;
@@ -1250,12 +1352,36 @@ function focusMapOnEvent(event) {
 
   const finalizeFocus = () => {
     if (focusToken !== pendingMapFocusToken) return;
+
+    markerEntries.forEach(({ eventId, marker: entryMarker }) => {
+      if (eventId === event.id && typeof entryMarker.bringToFront === "function") {
+        entryMarker.bringToFront();
+      }
+    });
+
     if (marker && typeof marker.bringToFront === "function") {
       marker.bringToFront();
     }
   };
 
   leafletMap.once("moveend", finalizeFocus);
+
+  if (focusLatLngs.length > 1) {
+    const focusBounds = L.latLngBounds(focusLatLngs);
+    leafletMap.flyToBounds(focusBounds, {
+      animate: true,
+      duration: 0.85,
+      easeLinearity: 0.2,
+      padding: [36, 36],
+      maxZoom: 8
+    });
+    return;
+  }
+
+  const focusPoint = focusLatLngs[0];
+  const targetZoom = getEventFocusZoom();
+  const targetCenter = getPopupAwareCenter(focusPoint.lat, focusPoint.lng, targetZoom);
+
   leafletMap.flyTo(targetCenter, targetZoom, {
     animate: true,
     duration: 0.85,
@@ -1306,9 +1432,11 @@ function renderEventsMap(activeCategoriesSet = getActiveCategories()) {
 
   leafletMarkersLayer.clearLayers();
   markersByEventId.clear();
+  markerEntries.length = 0;
 
   if (leafletRoutesLayer) {
     leafletRoutesLayer.clearLayers();
+    routeEntries.length = 0;
   }
 
   if (leafletHeatLayer) {
@@ -1332,6 +1460,7 @@ function renderEventsMap(activeCategoriesSet = getActiveCategories()) {
     });
 
     polyline.addTo(leafletRoutesLayer);
+    routeEntries.push({ eventId: event.id, layer: polyline });
     routePoints.forEach((point) => bounds.push(point));
   });
 
@@ -1382,6 +1511,12 @@ function renderEventsMap(activeCategoriesSet = getActiveCategories()) {
         }
       });
       marker.addTo(leafletMarkersLayer);
+      markerEntries.push({
+        eventId: event.parentEventId || event.id,
+        marker,
+        isStep,
+        pointKind: event.kind || "main"
+      });
       markersByEventId.set(event.id, marker);
 
       if (event.parentEventId && !markersByEventId.has(event.parentEventId)) {
@@ -1415,6 +1550,8 @@ function renderEventsMap(activeCategoriesSet = getActiveCategories()) {
       }
     });
   }
+
+  updateMapSelectionHighlight();
 
   requestAnimationFrame(() => {
     leafletMap.invalidateSize();
@@ -1731,3 +1868,11 @@ requestAnimationFrame(() => {
   scroller.scrollLeft = Math.max(0, x - scroller.clientWidth / 2);
   hasInitialTodayScroll = true;
 });
+
+
+if (mapResetBtn) {
+  mapResetBtn.addEventListener("click", () => {
+    selectedEventId = null;
+    updateMapSelectionHighlight();
+  });
+}

@@ -633,114 +633,286 @@ const rawTimelineEvents = [
     latitude: 45.237970159216964,
     longitude: 1.337997294703146
   },
-    {
-    title: "Croisière",
+  {
+    title: "Croisière Deliziosa",
     category: "travel",
-    startDate: "2012-05-10",
+    startDate: "2012-04-24",
+    endDate: "2012-05-03",
     color: "#1B4397",
-    steps :[
+    steps: [
       {
         category: "travel",
         color: "#1B4397",
-        city:"Copenhague",
-        country: "Danemark",
-        latitude: 55.71554174079403, 
-        longitude: 12.624303379978363
-      },
-      {
-        category: "travel",
-        color: "#1B4397",
-        city:"Stockholm",
-        country: "Suède",
-        latitude: 58.90925923915847, 
-        longitude: 17.959204155728063
-      },
-      {
-        category: "travel",
-        color: "#1B4397",
-        city:"Helsinki",
-        country: "Finlande",
-        latitude:  60.1485881703305, 
-        longitude: 24.920683488092802
-      },
-      {
-        category: "travel",
-        color: "#1B4397",
-        city:"St Petersbourg",
-        country: "Russie",
-        latitude:  59.93122316052001,  
-        longitude: 30.27185273662598
-      },
-            {
-        category: "travel",
-        color: "#1B4397",
-        city:"Tallinn",
-        country: "Estonie",
-        latitude: 59.44759876022049, 
-        longitude: 24.764679354397288
-      },
-                  {
-        category: "travel",
-        color: "#1B4397",
-        city:"Copenhague",
-        country: "Danemark",
-        latitude: 55.71554174079403, 
-        longitude: 12.624303379978363
-      },
-    ]
-  },
-      {
-    title: "Croisière",
-    category: "travel",
-    startDate: "2013-05-10",
-    color: "#1B4397",
-    steps :[
-      {
-        category: "travel",
-        color: "#1B4397",
-        city:"Marseille",
-        country: "France",
-        latitude: 43.34432699124567, 
-        longitude: 5.3309562158240675
-      },
-      {
-        category: "travel",
-        color: "#1B4397",
-        city:"Savone",
+        city: "Savone",
         country: "Italie",
-        latitude: 44.315038428721074, 
+        latitude: 44.315038428721074,
         longitude: 8.497466049659366
       },
       {
         category: "travel",
         color: "#1B4397",
-        city:"Rome",
+        city: "Naples",
         country: "Italie",
-        latitude:  42.094052397925836, 
-        longitude: 11.778228789255637
+        latitude: 40.83807846938446,
+        longitude: 14.260521071254884
       },
       {
         category: "travel",
         color: "#1B4397",
-        city:"La Valette",
+        city: "La Valette",
         country: "Malte",
-        latitude:  35.89153959940506,
-        longitude:  14.51763467167239
+        latitude: 35.89153959940506,
+        longitude: 14.51763467167239
       },
-            {
+      {
         category: "travel",
         color: "#1B4397",
-        city:"Palma",
+        city: "Gagliari",
+        country: "Italie",
+        latitude: 39.210917693910666,
+        longitude: 9.106684272559873
+      },
+      {
+        category: "travel",
+        color: "#1B4397",
+        city: "Ajaccio",
+        country: "France",
+        latitude: 41.92228053609511,
+        longitude: 8.741404752959944
+      },
+      {
+        category: "travel",
+        color: "#1B4397",
+        city: "Savone",
+        country: "Italie",
+        latitude: 44.315038428721074,
+        longitude: 8.497466049659366
+      },
+    ]
+  },
+  {
+    title: "Croisière Costa Luminosa",
+    category: "travel",
+    startDate: "2012-10-29",
+    endDate: "2012-11-03",
+    color: "#1B4397",
+    steps: [
+      {
+        category: "travel",
+        color: "#1B4397",
+        city: "Marseille",
+        country: "France",
+        latitude: 43.34432699124567,
+        longitude: 5.3309562158240675
+      },
+      {
+        category: "travel",
+        color: "#1B4397",
+        city: "Savone",
+        country: "Italie",
+        latitude: 44.315038428721074,
+        longitude: 8.497466049659366
+      },
+      {
+        category: "travel",
+        color: "#1B4397",
+        city: "Barcelone",
         country: "Espagne",
-        latitude: 39.55562174277503, 
+        latitude: 41.37088594046451,
+        longitude: 2.1809917656819287
+      },
+      {
+        category: "travel",
+        color: "#1B4397",
+        city: "Palma",
+        country: "Espagne",
+        latitude: 39.55562174277503,
         longitude: 2.627061857642466
       },
-                  {
+      {
         category: "travel",
         color: "#1B4397",
-        city:"Marseille",
+        city: "Ajaccio",
         country: "France",
-        latitude: 43.34432699124567, 
+        latitude: 41.92228053609511,
+        longitude: 8.741404752959944
+      },
+      {
+        category: "travel",
+        color: "#1B4397",
+        city: "Marseille",
+        country: "France",
+        latitude: 43.34432699124567,
+        longitude: 5.3309562158240675
+      },
+    ]
+  },
+  {
+    title: "Croisière Costa Serena",
+    category: "travel",
+    startDate: "2013-10-29",
+    color: "#1B4397",
+    steps: [
+      {
+        category: "travel",
+        color: "#0051ff",
+        city: "Savone",
+        country: "Italie",
+        latitude: 44.315038428721074,
+        longitude: 8.497466049659366
+      },
+      {
+        category: "travel",
+        color: "#0051ff",
+        city: "Rome",
+        country: "Italie",
+        latitude: 42.094052397925836,
+        longitude: 11.778228789255637
+      },
+      {
+        category: "travel",
+        color: "#0051ff",
+        city: "Palerme",
+        country: "Italie",
+        latitude: 38.12697100848982,
+        longitude: 13.365432749388749
+      },
+      {
+        category: "travel",
+        color: "#0051ff",
+        city: "Valence",
+        country: "Espagne",
+        latitude: 39.46131733250623,
+        longitude: - 0.30782575177382016
+      },
+      {
+        category: "travel",
+        color: "#0051ff",
+        city: "Palma",
+        country: "Espagne",
+        latitude: 39.55562174277503,
+        longitude: 2.627061857642466
+      },
+      {
+        category: "travel",
+        color: "#0051ff",
+        city: "Marseille",
+        country: "France",
+        latitude: 43.34432699124567,
+        longitude: 5.3309562158240675
+      },
+    ]
+  },
+  {
+    title: "Croisière Costa Luminosa",
+    category: "travel",
+    startDate: "2014-08-17",
+    endDate: "2014-08-25",
+    color: "#1B4397",
+    steps: [
+      {
+        category: "travel",
+        color: "#1B4397",
+        city: "Copenhague",
+        country: "Danemark",
+        latitude: 55.71554174079403,
+        longitude: 12.624303379978363
+      },
+      {
+        category: "travel",
+        color: "#1B4397",
+        city: "Stockholm",
+        country: "Suède",
+        latitude: 58.90925923915847,
+        longitude: 17.959204155728063
+      },
+      {
+        category: "travel",
+        color: "#1B4397",
+        city: "Helsinki",
+        country: "Finlande",
+        latitude: 60.1485881703305,
+        longitude: 24.920683488092802
+      },
+      {
+        category: "travel",
+        color: "#1B4397",
+        city: "St Petersbourg",
+        country: "Russie",
+        latitude: 59.93122316052001,
+        longitude: 30.27185273662598
+      },
+      {
+        category: "travel",
+        color: "#1B4397",
+        city: "Tallinn",
+        country: "Estonie",
+        latitude: 59.44759876022049,
+        longitude: 24.764679354397288
+      },
+      {
+        category: "travel",
+        color: "#1B4397",
+        city: "Copenhague",
+        country: "Danemark",
+        latitude: 55.71554174079403,
+        longitude: 12.624303379978363
+      },
+    ]
+  },
+  {
+    title: "Croisière Diadema",
+    category: "travel",
+    startDate: "2015-10-18",
+    endDate: "2015-10-25",
+    color: "#ffc400",
+    steps: [
+      {
+        category: "travel",
+        color: "#ffc400",
+        city: "Marseille",
+        country: "France",
+        latitude: 43.34432699124567,
+        longitude: 5.3309562158240675
+      },
+      {
+        category: "travel",
+        color: "#ffc400",
+        city: "Barcelone",
+        country: "Espagne",
+        latitude: 41.37088594046451,
+        longitude: 2.1809917656819287
+      },
+      {
+        category: "travel",
+        color: "#ffc400",
+        city: "Palma",
+        country: "Espagne",
+        latitude: 39.55562174277503,
+        longitude: 2.627061857642466
+      },
+      {
+        category: "travel",
+        color: "#ffc400",
+        city: "Naples",
+        country: "Italie",
+        latitude: 40.83807846938446,
+        longitude: 14.260521071254884
+      },
+      {
+        category: "travel",
+        color: "#ffc400",
+        city: "Pise",
+        country: "Italie",
+        latitude: 43.55313835882257,
+        longitude: 10.29656634026772
+      },
+      {
+        category: "travel",
+        color: "#ffc400",
+        city: "Marseille",
+        country: "France",
+        latitude: 43.34432699124567,
         longitude: 5.3309562158240675
       },
     ]
@@ -894,35 +1066,35 @@ const rawTimelineEvents = [
     color: "#095D8F",
     city: "Kuala Lumpur",
     country: "Malaysia",
-    steps :[
+    steps: [
       {
         category: "travel",
         color: "#095D8F",
-        latitude: 3.1340741499864717,  
+        latitude: 3.1340741499864717,
         longitude: 101.68586462331264
       },
       {
         category: "travel",
         color: "#095D8F",
-        latitude: 3.237603631767675, 
+        latitude: 3.237603631767675,
         longitude: 101.68343890389687
       },
       {
         category: "travel",
         color: "#095D8F",
-        latitude:  3.157490751524035, 
+        latitude: 3.157490751524035,
         longitude: 101.71176144297
       },
       {
         category: "travel",
         color: "#095D8F",
-        latitude:  3.1550831740843575,  
+        latitude: 3.1550831740843575,
         longitude: 101.7129295586841
       },
-            {
+      {
         category: "travel",
         color: "#095D8F",
-        latitude: 3.1340741499864717,  
+        latitude: 3.1340741499864717,
         longitude: 101.68586462331264
       },
     ]
@@ -977,7 +1149,7 @@ const rawTimelineEvents = [
     country: "Belgium",
     latitude: 50.58441635686449,
     longitude: 3.8869135051694452
-  }, 
+  },
   {
     title: "Singapour",
     category: "travel",
