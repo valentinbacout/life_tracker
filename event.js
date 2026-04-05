@@ -1046,7 +1046,7 @@ const rawTimelineEvents = [
     description: "Organisé par le BDE",
     color: "#DD2517",
     city: "Amsterdam",
-    country: "Netherlands",
+    country: "Pays-Bas",
     latitude: 52.3676,
     longitude: 4.9041
   },
@@ -1057,7 +1057,7 @@ const rawTimelineEvents = [
     description: "Organisé par le BDE",
     color: "#DD2517",
     city: "London",
-    country: "United Kingdom",
+    country: "Angleterre",
     latitude: 51.5072,
     longitude: -0.1276
   },
