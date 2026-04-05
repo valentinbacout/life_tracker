@@ -1136,7 +1136,25 @@ function renderStats() {
   if (statsEls.countries) statsEls.countries.textContent = `${countries.size} / ${TOTAL_COUNTRIES}`;
   if (statsEls.cities) statsEls.cities.textContent = String(cities.size);
   if (statsEls.travels) {
-    const travelCount = normalized.filter((event) => event.category === "travel").length;
+    const travelCount = normalized.filter((event) => {
+      if (event.category !== "travel") return false;
+
+      // Cas 1 : le voyage lui-même est à l'étranger
+      if (event.country && event.country.toLowerCase() !== "france") {
+        return true;
+      }
+
+      // Cas 2 : au moins une étape est à l'étranger
+      if (Array.isArray(event.steps)) {
+        return event.steps.some(
+          (step) =>
+            step.country &&
+            step.country.toLowerCase() !== "france"
+        );
+      }
+
+      return false;
+    }).length;
     statsEls.travels.textContent = String(travelCount);
   }
   if (statsEls.distance) statsEls.distance.textContent = `${Math.round(totalDistance)} km`;

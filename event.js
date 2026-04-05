@@ -52,7 +52,7 @@ const rawTimelineEvents = [
     endDate: "2024-07-26",
     color: "#00c3ff",
     city: "Malacca",
-    country: "Malaysia",
+    country: "Malaisie",
     latitude: 2.1992834859871064,
     longitude: 102.23149617804286
   },
@@ -212,7 +212,7 @@ const rawTimelineEvents = [
     description: "Malacca, Malaisie",
     color: "#095D8F",
     city: "Malacca",
-    country: "Malaysia",
+    country: "Malaisie",
     latitude: 2.3622738557667207,
     longitude: 102.20449376231203,
     steps: [
@@ -242,7 +242,7 @@ const rawTimelineEvents = [
         title: "Arrivée à Kuala Lumpur",
         date: "2024-03-03",
         city: "Kuala Lumpur",
-        country: "Malaysia",
+        country: "Malaisie",
         latitude: 2.740226962168589,
         longitude: 101.70117720538843
       },
@@ -252,7 +252,7 @@ const rawTimelineEvents = [
         title: "Départ de Kuala Lumpur",
         date: "2024-07-25",
         city: "Kuala Lumpur",
-        country: "Malaysia",
+        country: "Malaisie",
         latitude: 2.740226962168589,
         longitude: 101.70117720538843
       },
@@ -1065,7 +1065,7 @@ const rawTimelineEvents = [
     startDate: "2024-04-15",
     color: "#095D8F",
     city: "Kuala Lumpur",
-    country: "Malaysia",
+    country: "Malaisie",
     steps: [
       {
         category: "travel",
@@ -1106,8 +1106,8 @@ const rawTimelineEvents = [
     color: "#095D8F",
     city: "Singapore",
     country: "Singapore",
-    latitude: 1.3521,
-    longitude: 103.8198
+    latitude: 1.2843277942862887, 
+    longitude: 103.85916445116489
   },
   {
     title: "Singapour",
@@ -1116,8 +1116,8 @@ const rawTimelineEvents = [
     color: "#095D8F",
     city: "Singapore",
     country: "Singapore",
-    latitude: 1.3521,
-    longitude: 103.8198
+    latitude: 1.25240695545997,
+    longitude: 103.83374038381272
   },
   {
     title: "Pairi Daiza",
@@ -1151,27 +1151,55 @@ const rawTimelineEvents = [
     longitude: 3.8869135051694452
   },
   {
-    title: "Singapour",
+    title: "Singapour - Malaisie",
     category: "travel",
     startDate: "2026-08-04",
-    endDate: "2026-08-07",
-    color: "#2FD866",
-    city: "Singapore",
-    country: "Singapore",
-    latitude: 1.3521,
-    longitude: 103.8198
-  },
-
-  {
-    title: "Malaisie",
-    category: "travel",
-    startDate: "2026-08-08",
     endDate: "2026-08-12",
-    color: "#2FD866",
-    city: "Kuala Lumpur",
-    country: "Malaysia",
-    latitude: 3.139,
-    longitude: 101.6869
+    color: "#138a3a",
+    steps: [
+      {
+        category: "travel",
+        date: "2026-08-04",
+        endDate: "2026-08-07",
+        city: "Singapour",
+        country: "Singapour",
+        latitude: 1.2861521751029412, 
+        longitude: 103.85352936659403
+      },
+      {
+        category: "travel",
+        date: "2026-08-08",
+        city: "Malacca",
+        country: "Malaisie",
+        latitude: 2.194056715773639,
+        longitude: 102.24911178168816
+      },
+      {
+        category: "travel",
+        date: "2026-08-09",
+        city: "Kuala Lumpur",
+        country: "Malaisie",
+        latitude: 3.15641329416338,
+        longitude: 101.70849865227237
+      },
+      {
+        category: "travel",
+        date: "2026-08-10",
+        city: "Langkawi",
+        country: "Malaisie",
+        latitude: 6.355048341115887,
+        longitude: 99.7845896515892
+      },
+      {
+        category: "travel",
+        date: "2026-08-11",
+        endDate: "2026-08-12",
+        city: "Kuala Lumpur",
+        country: "Malaisie",
+        latitude: 3.15641329416338,
+        longitude: 101.70849865227237
+      },
+    ]
   },
 
   // ASSOCIATION
