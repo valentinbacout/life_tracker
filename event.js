@@ -1179,8 +1179,8 @@ const rawTimelineEvents = [
         date: "2026-08-09",
         city: "Kuala Lumpur",
         country: "Malaisie",
-        latitude: 3.15641329416338,
-        longitude: 101.70849865227237
+        latitude: 2.741572427260337, 
+        longitude: 101.70038871903554
       },
       {
         category: "travel",
