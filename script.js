@@ -778,9 +778,10 @@ function closeDrawer() {
 function updateMapSelectionHighlight() {
   if (!leafletMap) return;
 
-  const hasSelection = Boolean(selectedEventId);
-  const selectedEvent = hasSelection ? getEventById(selectedEventId) : null;
-  const selectedEventHasMainLocation = eventHasMainMapLocation(selectedEvent);
+  const selectedEvent = selectedEventId ? getEventById(selectedEventId) : null;
+  const hasSelection = Boolean(selectedEvent);
+  const hasMapFocusSelection = hasSelection && getEventFocusLatLngs(selectedEvent).length > 0;
+  const selectedEventHasMainLocation = hasMapFocusSelection && eventHasMainMapLocation(selectedEvent);
 
   markerEntries.forEach(({ eventId, marker, isStep, pointKind }) => {
     const belongsToSelectedEvent = hasSelection && eventId === selectedEventId;
@@ -792,10 +793,10 @@ function updateMapSelectionHighlight() {
     const normalFill = isStep ? 0.75 : 0.9;
 
     marker.setStyle({
-      radius: hasSelection ? (shouldHighlightMarker ? baseRadius + 2 : baseRadius) : baseRadius,
-      opacity: hasSelection ? (shouldHighlightMarker ? 1 : dimOpacity) : 1,
-      fillOpacity: hasSelection ? (shouldHighlightMarker ? 0.98 : dimOpacity) : normalFill,
-      weight: hasSelection ? (shouldHighlightMarker ? 3 : (isStep ? 1 : 1.5)) : (isStep ? 1.5 : 2)
+      radius: hasMapFocusSelection ? (shouldHighlightMarker ? baseRadius + 2 : baseRadius) : baseRadius,
+      opacity: hasMapFocusSelection ? (shouldHighlightMarker ? 1 : dimOpacity) : 1,
+      fillOpacity: hasMapFocusSelection ? (shouldHighlightMarker ? 0.98 : dimOpacity) : normalFill,
+      weight: hasMapFocusSelection ? (shouldHighlightMarker ? 3 : (isStep ? 1 : 1.5)) : (isStep ? 1.5 : 2)
     });
 
     if (shouldHighlightMarker && typeof marker.bringToFront === "function") {
@@ -808,8 +809,8 @@ function updateMapSelectionHighlight() {
     const shouldHighlightRoute = belongsToSelectedEvent && !selectedEventHasMainLocation;
 
     layer.setStyle({
-      opacity: hasSelection ? (shouldHighlightRoute ? 0.95 : 0.08) : 0.7,
-      weight: hasSelection ? (shouldHighlightRoute ? 4 : 2) : 2
+      opacity: hasMapFocusSelection ? (shouldHighlightRoute ? 0.95 : 0.08) : 0.7,
+      weight: hasMapFocusSelection ? (shouldHighlightRoute ? 4 : 2) : 2
     });
 
     if (shouldHighlightRoute && typeof layer.bringToFront === "function") {
