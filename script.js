@@ -1408,6 +1408,61 @@ function focusMapOnEvent(event) {
   });
 }
 
+function resetMapViewToInitial(activeCategoriesSet = getActiveCategories()) {
+  if (!leafletMap) return;
+
+  const normalizedEvents = normalizeEvents(events);
+  const mappedEvents = normalizedEvents
+    .flatMap((event) => getEventMapPoints(event))
+    .filter((point) => isMapPointVisible(point, activeCategoriesSet));
+
+  const bounds = [];
+
+  normalizedEvents.forEach((event) => {
+    if (isHeatmapEnabled) return;
+
+    const routePoints = getEventRoutePoints(event, activeCategoriesSet);
+    if (routePoints.length < 2) return;
+
+    routePoints.forEach((point) => bounds.push(point));
+  });
+
+  mappedEvents.forEach((event) => {
+    bounds.push([Number(event.latitude), Number(event.longitude)]);
+  });
+
+  leafletMap.stop();
+  leafletMap.closePopup();
+  leafletMap.invalidateSize({ pan: false });
+
+  if (bounds.length === 1) {
+    leafletMap.flyTo(bounds[0], Math.max(6, leafletMap.getMinZoom()), {
+      animate: true,
+      duration: 0.85,
+      easeLinearity: 0.2
+    });
+    return;
+  }
+
+  if (bounds.length > 1) {
+    const latLngBounds = L.latLngBounds(bounds);
+    leafletMap.flyToBounds(latLngBounds, {
+      animate: true,
+      duration: 0.85,
+      easeLinearity: 0.2,
+      padding: [30, 30],
+      maxZoom: 8
+    });
+    return;
+  }
+
+  leafletMap.flyTo([46.603354, 1.888334], Math.max(5, leafletMap.getMinZoom()), {
+    animate: true,
+    duration: 0.85,
+    easeLinearity: 0.2
+  });
+}
+
 function renderEventsMap(activeCategoriesSet = getActiveCategories()) {
   if (!mapEl || typeof L === "undefined") return;
 
@@ -1891,6 +1946,16 @@ requestAnimationFrame(() => {
 if (mapResetBtn) {
   mapResetBtn.addEventListener("click", () => {
     selectedEventId = null;
+    isDrawerOpen = false;
+    lastFocusedEventId = null;
+    shouldRestoreFocusedPopup = false;
+
+    if (leafletMap) {
+      leafletMap.closePopup();
+    }
+
     updateMapSelectionHighlight();
+    updateMapPanelUi();
+    resetMapViewToInitial();
   });
 }

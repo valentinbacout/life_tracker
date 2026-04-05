@@ -50,13 +50,18 @@
               <h2 id="map-panel-title">Carte des lieux</h2>
             </div>
             <div class="map-panel-actions">
-              <button id="map-reset-btn" class="map-reset-btn" hidden>✕</button>
               <label class="map-toggle" for="heatmap-toggle" id="heatmap-toggle-wrap">
                 <input type="checkbox" id="heatmap-toggle" />
                 <span>Heatmap</span>
               </label>
+
               <button type="button" class="map-view-toggle" id="map-view-toggle" hidden>
                 Voir la fiche
+              </button>
+
+              <button id="map-reset-btn" class="map-reset-btn" type="button" hidden
+                aria-label="Désélectionner l’événement">
+                ✕
               </button>
             </div>
           </div>
@@ -71,7 +76,8 @@
                 <button type="button" class="event-drawer__close" id="event-drawer-close"
                   aria-label="Revenir à la carte">×</button>
                 <div class="event-drawer__content" id="event-drawer-content">
-                  <p class="event-drawer__empty">Sélectionne un événement dans la timeline ou sur la carte pour afficher sa fiche.</p>
+                  <p class="event-drawer__empty">Sélectionne un événement dans la timeline ou sur la carte pour afficher
+                    sa fiche.</p>
                 </div>
               </div>
             </aside>
