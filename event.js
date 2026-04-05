@@ -232,7 +232,7 @@ const rawTimelineEvents = [
         title: "Escale à Dubai",
         date: "2024-03-02",
         city: "Dubai",
-        country: "United Arab Emirates",
+        country: "Emirats Arabes Unis",
         latitude: 24.88588449190717,
         longitude: 55.1587217229964
       },
@@ -262,7 +262,7 @@ const rawTimelineEvents = [
         title: "Escale à Dubai",
         date: "2024-07-26",
         city: "Dubai",
-        country: "United Arab Emirates",
+        country: "Emirats Arabes Unis",
         latitude: 24.88588449190717,
         longitude: 55.1587217229964
       },
@@ -425,7 +425,7 @@ const rawTimelineEvents = [
     description: "GP Formule 1",
     color: "#F1D60A",
     city: "Francorchamps",
-    country: "Belgium",
+    country: "Belgique",
     latitude: 50.438249714596864,
     longitude: 5.970471274786538
   },
@@ -458,7 +458,7 @@ const rawTimelineEvents = [
     description: "GP Formule 1",
     color: "#F1D60A",
     city: "Francorchamps",
-    country: "Belgium",
+    country: "Belgique",
     latitude: 50.438249714596864,
     longitude: 5.970471274786538
   },
@@ -1022,7 +1022,7 @@ const rawTimelineEvents = [
     startDate: "2022-04-01",
     color: "#FFD401",
     city: "Billund",
-    country: "Denmark",
+    country: "Danemark",
     latitude: 55.73064476170786,
     longitude: 9.114845705359995
   },
@@ -1104,8 +1104,8 @@ const rawTimelineEvents = [
     category: "travel",
     startDate: "2024-06-15",
     color: "#095D8F",
-    city: "Singapore",
-    country: "Singapore",
+    city: "Singapour",
+    country: "Singapour",
     latitude: 1.2843277942862887, 
     longitude: 103.85916445116489
   },
@@ -1114,8 +1114,8 @@ const rawTimelineEvents = [
     category: "travel",
     startDate: "2024-07-20",
     color: "#095D8F",
-    city: "Singapore",
-    country: "Singapore",
+    city: "Singapour",
+    country: "Singapour",
     latitude: 1.25240695545997,
     longitude: 103.83374038381272
   },
@@ -1125,7 +1125,7 @@ const rawTimelineEvents = [
     startDate: "2024-12-28",
     color: "#2FD866",
     city: "Ath",
-    country: "Belgium",
+    country: "Belgique",
     latitude: 50.58441635686449,
     longitude: 3.8869135051694452
   },
@@ -1146,7 +1146,7 @@ const rawTimelineEvents = [
     startDate: "2025-12-27",
     color: "#2FD866",
     city: "Ath",
-    country: "Belgium",
+    country: "Belgique",
     latitude: 50.58441635686449,
     longitude: 3.8869135051694452
   },
