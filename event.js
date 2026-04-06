@@ -89,8 +89,8 @@ const rawTimelineEvents = [
     color: "#73aff6",
     city: "Bousies",
     country: "France",
-    latitude: 50.148,
-    longitude: 3.619
+    latitude: 50.15004239103724,
+    longitude: 3.616966668653217,
   },
   {
     title: "Primaire",
@@ -101,8 +101,8 @@ const rawTimelineEvents = [
     color: "#73aff6",
     city: "Bousies",
     country: "France",
-    latitude: 50.148,
-    longitude: 3.619
+    latitude: 50.15061000870284,
+    longitude: 3.617143709374,
   },
   {
     title: "Collège Montaigne Poix du nord",
@@ -113,14 +113,14 @@ const rawTimelineEvents = [
     color: "#73aff6",
     city: "Poix-du-Nord",
     country: "France",
-    latitude: 50.189,
-    longitude: 3.644
+    latitude: 50.19255544747466,
+    longitude: 3.6073960270644982,
   },
   {
     title: "Brevet des Collèges",
     category: "education",
     startDate: "2016-06-15",
-    description: "Mention Très Bien",
+    details: "Mention Très Bien",
     color: "#73aff6",
   },
   {
@@ -139,7 +139,7 @@ const rawTimelineEvents = [
     title: "Briançon (lycée)",
     category: "education",
     startDate: "2018-10-01",
-    description: "Déplacement scolaire",
+    details: "Déplacement scolaire",
     color: "#2FD866",
     city: "Briançon",
     country: "France",
@@ -150,7 +150,7 @@ const rawTimelineEvents = [
     title: "Paris (Palais de la découverte)",
     category: "education",
     startDate: "2018-11-01",
-    description: "Déplacement scolaire",
+    details: "Déplacement scolaire",
     color: "#22a6b3",
     city: "Paris",
     country: "France",
@@ -161,7 +161,7 @@ const rawTimelineEvents = [
     title: "Baccalauréat",
     category: "education",
     startDate: "2019-06-30",
-    description: "Mention Très Bien",
+    details: "Mention Très Bien",
     color: "#73aff6",
   },
   {
@@ -298,14 +298,14 @@ const rawTimelineEvents = [
     longitude: 6.730946052315697,
     gallery: [
       {
-        src: "images/deleo_cristal_pro_neon.JPG",
-        alt: "Cristal pro",
-        caption: "Cristal pro"
+        src: "images/deleo-origin2x-neon-machine-iwk4na__.webp",
+        alt: "Origin",
+        caption: "Origin"
       },
       {
         src: "images/deleo-sublim2x-neon-machine-IVhUH8__.webp",
         alt: "Sublim",
-        caption: "SUBLIM"
+        caption: "Sublim"
       }
     ]
   },
