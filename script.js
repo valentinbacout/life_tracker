@@ -740,10 +740,11 @@ function renderDrawerContent(event) {
     </div>
     <h2 class="event-drawer__title" id="event-drawer-title">${escapeHtml(event.title || "Sans titre")}</h2>
     ${location ? `<p class="event-drawer__location">📍 ${escapeHtml(location)}</p>` : ""}
-    <div class="event-drawer__section">
-      <h3>Description</h3>
-      <p>${escapeHtml(event.description || "Aucune description disponible.")}</p>
-    </div>
+${event.description ? `
+  <div class="event-drawer__section">
+    <p>${escapeHtml(event.description)}</p>
+  </div>
+` : ""}
     ${embedUrl ? `
       <div class="event-drawer__section">
         <h3>Vidéo</h3>

@@ -193,7 +193,6 @@ const rawTimelineEvents = [
     category: "education",
     startDate: "2023-09-15",
     endDate: "2024-02-15",
-    description: "",
     color: "#22a6b3",
   },
   {
@@ -201,7 +200,6 @@ const rawTimelineEvents = [
     category: "education",
     startDate: "2023-12-03",
     endDate: "2024-02-15",
-    description: "",
     color: "#22a6b3",
   },
   {
@@ -209,9 +207,8 @@ const rawTimelineEvents = [
     category: "education",
     startDate: "2024-03-03",
     endDate: "2024-07-19",
-    description: "Malacca, Malaisie",
     color: "#095D8F",
-    city: "Malacca",
+    city: "Alor Gajah",
     country: "Malaisie",
     latitude: 2.3622738557667207,
     longitude: 102.20449376231203,
@@ -1139,7 +1136,8 @@ const rawTimelineEvents = [
     city: "Ath",
     country: "Belgique",
     latitude: 50.58441635686449,
-    longitude: 3.8869135051694452
+    longitude: 3.8869135051694452,
+    youtubeUrl: "https://www.youtube.com/watch?v=0H2eshg8_l8",
   },
   {
     title: "Monaco",
