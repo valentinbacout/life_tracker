@@ -827,6 +827,20 @@ function formatFullDate(ms) {
   }).format(new Date(ms));
 }
 
+const DISTANCE_EXCLUDED_EDUCATION_TITLES = new Set([
+  "Maternelle",
+  "Primaire",
+  "Collège Montaigne Poix du nord",
+  "Lycée Dupleix Landrecies",
+  "INSA Hauts-de-France",
+  "Ingénieur Conception Mécanique"
+]);
+
+function shouldExcludeEventFromDistanceStats(event) {
+  if (!event || event.category !== "education") return false;
+  return DISTANCE_EXCLUDED_EDUCATION_TITLES.has(String(event.title || "").trim());
+}
+
 function formatDurationBetween(startMs, endMs) {
   const startDate = toDate(startMs);
   const endDate = toDate(endMs);
@@ -1036,7 +1050,7 @@ function buildDistanceDetailItems(distanceSegments = [], eventLookup = new Map()
   const groups = new Map();
 
   visibleSegments.forEach((segment, index) => {
-    const key = segment.eventId || `segment_${index}`;
+    const key = segment.groupKey || segment.eventId || `segment_${index}`;
     if (!groups.has(key)) {
       groups.set(key, {
         eventId: segment.eventId || null,
@@ -1086,13 +1100,24 @@ function buildDistanceDetailItems(distanceSegments = [], eventLookup = new Map()
       return;
     }
 
-    groupSegments.forEach((segment) => {
-      items.push({
-        title: `${segment.from} → ${segment.to}`,
-        meta: `${formatDetailDateRange(segment.startDate, segment.endDate)} · ${Math.round(segment.distance)} km`,
-        chips: [group.eventTitle].filter(Boolean),
-        eventId: group.eventId || undefined
-      });
+    const pathParts = [];
+
+    groupSegments.forEach((segment, index) => {
+      if (index === 0) {
+        pathParts.push(segment.from);
+      }
+      pathParts.push(segment.to);
+    });
+
+    const totalKm = Math.round(
+      groupSegments.reduce((sum, segment) => sum + Number(segment.distance || 0), 0)
+    );
+
+    items.push({
+      title: pathParts.join(" → "),
+      meta: `${formatDetailDateRange(groupSegments[0].startDate, groupSegments[groupSegments.length - 1].endDate)} · ${totalKm} km`,
+      chips: [group.eventTitle].filter(Boolean),
+      eventId: group.eventId || undefined
     });
   });
 
@@ -1341,68 +1366,122 @@ function renderStats() {
       return previousPlaces[previousPlaces.length - 1];
     }
 
-    return livingPlaceEvents[0] || null;
+    const nextPlace = livingPlaceEvents.find((livingPlace) => livingPlace.startMs > dateMs);
+    return nextPlace || livingPlaceEvents[0] || null;
   };
 
-  const getEventTravelPoints = (event) => {
-    const points = [];
-    const hasSteps = Array.isArray(event.steps) && event.steps.length > 0;
+  const normalizeDistanceNode = (item, fallbackDate, fallbackLabel, meta = {}) => {
+    const lat = Number(item?.latitude);
+    const lon = Number(item?.longitude);
 
-    const pushPoint = (item, fallbackDate, fallbackLabel) => {
-      const lat = Number(item?.latitude);
-      const lon = Number(item?.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
 
-      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+    const startValue = item?.date ?? item?.startDate ?? fallbackDate;
+    const endValue = item?.endDate ?? item?.date ?? item?.startDate ?? startValue;
+    if (startValue === undefined || startValue === null) return null;
 
-      const dateValue = item?.date ?? item?.startDate ?? fallbackDate;
-      if (!dateValue) return;
+    const startMs = toMs(startValue);
+    const endMs = toMs(endValue);
 
-      points.push({
-        lat,
-        lon,
-        date: toMs(dateValue),
-        label: item?.city || item?.title || item?.country || fallbackLabel || "Lieu",
-        country: item?.country || "",
-        city: item?.city || ""
-      });
+    return {
+      lat,
+      lon,
+      startMs,
+      endMs,
+      date: startMs,
+      label: item?.city || item?.title || item?.country || fallbackLabel || "Lieu",
+      country: item?.country || "",
+      city: item?.city || "",
+      ...meta
     };
+  };
 
-    if (hasSteps) {
-      event.steps.forEach((step) => pushPoint(step, event.startDate, event.title));
-    } else {
-      pushPoint(event, event.startDate, event.title);
+  const getDistanceOccurrences = (event, otherEvents = []) => {
+    const stepNodes = Array.isArray(event.steps)
+      ? event.steps
+        .map((step, index) => normalizeDistanceNode(step, event.startDate ?? event.startMs, event.title, {
+          stepIndex: index,
+          stepType: step?.type || "step"
+        }))
+        .filter(Boolean)
+        .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs || a.stepIndex - b.stepIndex)
+        .filter((node, index, array) => {
+          if (index === 0) return true;
+          const prev = array[index - 1];
+          return !(prev.lat === node.lat && prev.lon === node.lon && prev.startMs === node.startMs && prev.endMs === node.endMs);
+        })
+      : [];
+
+    if (stepNodes.length) {
+      const hasInterferingEventBetween = (leftMs, rightMs) => {
+        if (!Number.isFinite(leftMs) || !Number.isFinite(rightMs) || rightMs <= leftMs) return false;
+
+        return otherEvents.some((otherEvent) => {
+          if (otherEvent.id === event.id) return false;
+          const bounds = getDistanceBounds(otherEvent);
+          return bounds.startMs > leftMs && bounds.startMs < rightMs;
+        });
+      };
+
+      const clusters = [];
+      let currentCluster = [];
+
+      stepNodes.forEach((node, index) => {
+        currentCluster.push(node);
+
+        const nextNode = stepNodes[index + 1];
+        if (!nextNode) {
+          clusters.push(currentCluster);
+          return;
+        }
+
+        if (hasInterferingEventBetween(node.startMs, nextNode.startMs)) {
+          clusters.push(currentCluster);
+          currentCluster = [];
+        }
+      });
+
+      return clusters
+        .filter((cluster) => cluster.length)
+        .map((cluster, clusterIndex) => ({
+          groupKey: `${event.id}__steps_${clusterIndex + 1}`,
+          eventId: event.id,
+          eventTitle: event.title || "Événement",
+          segmentType: "event",
+          useSteps: true,
+          startMs: cluster[0].startMs,
+          endMs: cluster[cluster.length - 1].endMs,
+          nodes: cluster
+        }));
     }
 
-    return points
-      .sort((a, b) => a.date - b.date)
-      .filter((point, index, array) => {
-        if (index === 0) return true;
-        const prev = array[index - 1];
+    const mainNode = normalizeDistanceNode(event, event.startMs, event.title);
+    if (!mainNode) return [];
 
-        return !(
-          prev.lat === point.lat &&
-          prev.lon === point.lon &&
-          prev.date === point.date
-        );
-      });
+    return [{
+      groupKey: `${event.id}__main`,
+      eventId: event.id,
+      eventTitle: event.title || "Événement",
+      segmentType: "event",
+      useSteps: false,
+      startMs: event.startMs,
+      endMs: event.endMs,
+      nodes: [mainNode]
+    }];
   };
 
-  const getEventEffectiveBounds = (event) => {
-    const relevantDates = [event.startMs, event.endMs];
-
-    if (Array.isArray(event.steps)) {
-      event.steps.forEach((step) => {
-        const startValue = step?.date ?? step?.startDate;
-        const endValue = step?.endDate ?? step?.date ?? step?.startDate;
-
-        if (startValue !== undefined) relevantDates.push(toMs(startValue));
-        if (endValue !== undefined) relevantDates.push(toMs(endValue));
-      });
+  const getDistanceBounds = (event) => {
+    const occurrences = getDistanceOccurrences(event, []);
+    if (occurrences.length) {
+      return {
+        startMs: Math.min(...occurrences.map((occurrence) => occurrence.startMs)),
+        endMs: Math.max(...occurrences.map((occurrence) => occurrence.endMs))
+      };
     }
 
     return {
-      startMs: Math.min(...relevantDates),
-      endMs: Math.max(...relevantDates)
+      startMs: event.startMs,
+      endMs: event.endMs
     };
   };
 
@@ -1426,79 +1505,75 @@ function renderStats() {
 
   const nonLivingEvents = normalized
     .filter((event) => event.category !== "living_place")
+    .filter((event) => !shouldExcludeEventFromDistanceStats(event))
     .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs);
 
-  nonLivingEvents.forEach((event) => {
-    const eventPoints = getEventTravelPoints(event);
-    if (!eventPoints.length) return;
-
-    const isDurationEvent = event.visualType === "range";
-    const pathStartDate = isDurationEvent ? eventPoints[0].date : event.startMs;
-    const pathEndDate = isDurationEvent ? eventPoints[eventPoints.length - 1].date : event.startMs;
-
-    const startHome = getActiveLivingPlaceForDate(pathStartDate);
-    const endHome = getActiveLivingPlaceForDate(pathEndDate);
+  const registerJourneyOccurrence = (occurrence) => {
+    const startHome = getActiveLivingPlaceForDate(occurrence.startMs);
+    const endHome = getActiveLivingPlaceForDate(occurrence.endMs);
+    const firstNode = occurrence.nodes[0];
+    const lastNode = occurrence.nodes[occurrence.nodes.length - 1];
 
     const startHomeLat = Number(startHome?.latitude);
     const startHomeLon = Number(startHome?.longitude);
     const endHomeLat = Number(endHome?.latitude);
     const endHomeLon = Number(endHome?.longitude);
 
-    const fullPath = [];
-
     if (Number.isFinite(startHomeLat) && Number.isFinite(startHomeLon)) {
-      const firstPoint = eventPoints[0];
-      const startsAtHome = firstPoint && firstPoint.lat === startHomeLat && firstPoint.lon === startHomeLon;
-
+      const startsAtHome = firstNode && firstNode.lat === startHomeLat && firstNode.lon === startHomeLon;
       if (!startsAtHome) {
-        fullPath.push({
-          lat: startHomeLat,
-          lon: startHomeLon,
-          date: pathStartDate,
-          label: startHome.city || startHome.title || "Lieu de vie",
-          country: startHome.country || "",
-          city: startHome.city || "",
-          isHome: true
+        registerDistanceSegment({
+          from: startHome?.city || startHome?.country || startHome?.title || "Lieu de vie départ",
+          to: firstNode.city || firstNode.country || firstNode.label || "Lieu suivant",
+          distance: distanceKm(startHomeLat, startHomeLon, firstNode.lat, firstNode.lon),
+          startDate: occurrence.startMs,
+          endDate: firstNode.startMs,
+          eventId: occurrence.eventId,
+          eventTitle: occurrence.eventTitle,
+          groupKey: occurrence.groupKey,
+          segmentType: occurrence.segmentType
         });
       }
     }
 
-    fullPath.push(...eventPoints);
-
-    if (Number.isFinite(endHomeLat) && Number.isFinite(endHomeLon)) {
-      const lastPoint = eventPoints[eventPoints.length - 1];
-      const endsAtHome = lastPoint && lastPoint.lat === endHomeLat && lastPoint.lon === endHomeLon;
-
-      if (!endsAtHome) {
-        fullPath.push({
-          lat: endHomeLat,
-          lon: endHomeLon,
-          date: pathEndDate,
-          label: endHome.city || endHome.title || "Lieu de vie",
-          country: endHome.country || "",
-          city: endHome.city || "",
-          isHome: true
-        });
-      }
-    }
-
-    for (let i = 1; i < fullPath.length; i += 1) {
-      const prev = fullPath[i - 1];
-      const curr = fullPath[i];
-      const d = distanceKm(prev.lat, prev.lon, curr.lat, curr.lon);
+    for (let index = 1; index < occurrence.nodes.length; index += 1) {
+      const prev = occurrence.nodes[index - 1];
+      const curr = occurrence.nodes[index];
 
       registerDistanceSegment({
         from: prev.city || prev.country || prev.label || "Lieu précédent",
         to: curr.city || curr.country || curr.label || "Lieu suivant",
-        distance: d,
-        startDate: prev.date,
-        endDate: curr.date,
-        eventId: event.id,
-        eventTitle: event.title || "Événement",
-        homeLabel: startHome?.city || startHome?.title || "Lieu de vie",
-        segmentType: "event"
+        distance: distanceKm(prev.lat, prev.lon, curr.lat, curr.lon),
+        startDate: prev.startMs,
+        endDate: curr.startMs,
+        eventId: occurrence.eventId,
+        eventTitle: occurrence.eventTitle,
+        groupKey: occurrence.groupKey,
+        segmentType: occurrence.segmentType
       });
     }
+
+    if (Number.isFinite(endHomeLat) && Number.isFinite(endHomeLon)) {
+      const endsAtHome = lastNode && lastNode.lat === endHomeLat && lastNode.lon === endHomeLon;
+      if (!endsAtHome) {
+        registerDistanceSegment({
+          from: lastNode.city || lastNode.country || lastNode.label || "Lieu précédent",
+          to: endHome?.city || endHome?.country || endHome?.title || "Lieu de vie arrivée",
+          distance: distanceKm(lastNode.lat, lastNode.lon, endHomeLat, endHomeLon),
+          startDate: lastNode.endMs,
+          endDate: occurrence.endMs,
+          eventId: occurrence.eventId,
+          eventTitle: occurrence.eventTitle,
+          groupKey: occurrence.groupKey,
+          segmentType: occurrence.segmentType
+        });
+      }
+    }
+  };
+
+  nonLivingEvents.forEach((event) => {
+    const occurrences = getDistanceOccurrences(event, nonLivingEvents);
+    occurrences.forEach((occurrence) => registerJourneyOccurrence(occurrence));
   });
 
   for (let i = 1; i < livingPlaceEvents.length; i += 1) {
@@ -1511,36 +1586,31 @@ function renderStats() {
 
     if (![prevLat, prevLon, nextLat, nextLon].every(Number.isFinite)) continue;
 
-    const moveStartMs = prevHome.endMs;
-    const moveEndMs = nextHome.startMs;
+    const moveStartMs = Math.min(prevHome.endMs, nextHome.startMs);
+    const moveEndMs = Math.max(prevHome.endMs, nextHome.startMs);
 
-    const hasInterferingTravelEvent = nonLivingEvents.some((event) => {
-      if (event.category !== "travel") return false;
+    const overlapsEventWithSteps = nonLivingEvents.some((event) => {
+      if (!Array.isArray(event.steps) || !event.steps.length) return false;
 
-      const hasOwnCoords =
-        Number.isFinite(Number(event?.latitude)) &&
-        Number.isFinite(Number(event?.longitude));
-      const hasSteps = Array.isArray(event.steps) && event.steps.length > 0;
-
-      if (!hasOwnCoords && !hasSteps) return false;
-
-      const bounds = getEventEffectiveBounds(event);
-      return bounds.startMs <= moveEndMs && bounds.endMs >= moveStartMs;
+      const occurrences = getDistanceOccurrences(event, nonLivingEvents);
+      return occurrences.some((occurrence) => {
+        const overlapStart = Math.max(moveStartMs, occurrence.startMs);
+        const overlapEnd = Math.min(moveEndMs, occurrence.endMs);
+        return overlapStart <= overlapEnd;
+      });
     });
 
-    if (hasInterferingTravelEvent) continue;
-
-    const d = distanceKm(prevLat, prevLon, nextLat, nextLon);
+    if (overlapsEventWithSteps) continue;
 
     registerDistanceSegment({
       from: prevHome.city || prevHome.country || prevHome.title || "Lieu de vie précédent",
       to: nextHome.city || nextHome.country || nextHome.title || "Nouveau lieu de vie",
-      distance: d,
+      distance: distanceKm(prevLat, prevLon, nextLat, nextLon),
       startDate: moveStartMs,
       endDate: moveEndMs,
       eventId: nextHome.id,
       eventTitle: `Déménagement : ${prevHome.title || prevHome.city || "Lieu de vie"} → ${nextHome.title || nextHome.city || "Lieu de vie"}`,
-      homeLabel: nextHome.city || nextHome.title || "Lieu de vie",
+      groupKey: `move_${nextHome.id}`,
       segmentType: "move"
     });
   }
