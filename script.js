@@ -1092,6 +1092,8 @@ const statsEls = {
   bestYearMeta: document.getElementById("stat-best-year-meta"),
   topCountry: document.getElementById("stat-top-country"),
   topCountryMeta: document.getElementById("stat-top-country-meta"),
+  artistsSeen: document.getElementById("stat-artists-seen"),
+  artistsSeenMeta: document.getElementById("stat-artists-seen-meta"),
   years: document.getElementById("stat-years"),
   breakdown: document.getElementById("stats-breakdown")
 };
@@ -1104,7 +1106,8 @@ const statCards = {
   distance: statsEls.distance?.closest(".stat-card") || null,
   longest: statsEls.longest?.closest(".stat-card") || null,
   bestYear: statsEls.bestYear?.closest(".stat-card") || null,
-  topCountry: statsEls.topCountry?.closest(".stat-card") || null
+  topCountry: statsEls.topCountry?.closest(".stat-card") || null,
+  artistsSeen: statsEls.artistsSeen?.closest(".stat-card") || null
 };
 
 let statsModalEl = null;
@@ -1125,6 +1128,44 @@ function titleCase(value) {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+function normalizeLineupArtistEntry(entry) {
+  if (typeof entry === "string") {
+    const name = entry.trim();
+    return name ? { name, rating: null, raw: entry } : null;
+  }
+
+  if (entry && typeof entry === "object") {
+    const name = String(entry.name || entry.artist || entry.title || "").trim();
+    if (!name) return null;
+
+    const ratingValue = entry.rating;
+    const numericRating = typeof ratingValue === "number"
+      ? ratingValue
+      : Number.parseFloat(String(ratingValue ?? "").replace(",", "."));
+
+    return {
+      name,
+      rating: Number.isFinite(numericRating) ? numericRating : null,
+      raw: entry
+    };
+  }
+
+  const fallbackName = String(entry || "").trim();
+  return fallbackName ? { name: fallbackName, rating: null, raw: entry } : null;
+}
+
+function normalizeLineup(lineup) {
+  if (!Array.isArray(lineup)) return [];
+  return lineup
+    .map((entry) => normalizeLineupArtistEntry(entry))
+    .filter(Boolean);
+}
+
+function formatArtistRating(rating) {
+  if (!Number.isFinite(rating)) return "";
+  const normalized = Number.isInteger(rating) ? String(rating) : String(rating).replace(/\.0+$/, "");
+  return `${normalized}/10`;
+}
 
 const COUNTRY_TO_CONTINENT = {
   "france": "Europe",
@@ -1157,8 +1198,6 @@ const COUNTRY_TO_CONTINENT = {
 
 const CONTINENT_ORDER = ["Europe", "Asie", "Afrique", "Amérique du Nord", "Amérique du Sud", "Océanie", "Autres"];
 const CONTINENT_TOTAL_COUNTRIES = {
-  // Valeurs configurables pour calculer le taux de couverture par continent.
-  // Tu peux ajuster Europe à 27 si tu veux raisonner en mode UE plutôt que continent géographique.
   "Europe": 27,
   "Asie": 49,
   "Afrique": 54,
@@ -1345,13 +1384,16 @@ function createStatDetailList(items = [], options = {}) {
 }
 
 
-function createGroupedStatDetailList(groups = []) {
+function createGroupedStatDetailList(groups = [], options = {}) {
   const visibleGroups = groups.filter((group) => Array.isArray(group.items) && group.items.length);
+  const introHtml = typeof options.introHtml === "string" ? options.introHtml.trim() : "";
+
   if (!visibleGroups.length) {
-    return '<p class="stats-detail-empty">Aucun détail disponible.</p>';
+    return introHtml || '<p class="stats-detail-empty">Aucun détail disponible.</p>';
   }
 
   return `
+    ${introHtml}
     <div class="stats-detail-groups">
       ${visibleGroups.map((group) => `
         <section class="stats-detail-group">
@@ -1363,6 +1405,83 @@ function createGroupedStatDetailList(groups = []) {
         </section>
       `).join("")}
     </div>
+  `;
+}
+
+function rankArtistsByRating(entries = []) {
+  return entries
+    .filter((entry) => entry && Number.isFinite(entry.bestRating))
+    .sort((a, b) => (
+      b.bestRating - a.bestRating
+      || b.averageRating - a.averageRating
+      || b.ratedAppearances - a.ratedAppearances
+      || b.eventCount - a.eventCount
+      || a.name.localeCompare(b.name, "fr-FR")
+    ));
+}
+
+function createArtistsPodiumMarkup(entries = []) {
+  const rankedEntries = rankArtistsByRating(entries);
+
+  if (!rankedEntries.length) return "";
+
+  const top3 = rankedEntries.slice(0, 3);
+  const rest = rankedEntries.slice(3, 10);
+  const podiumOrder = [1, 0, 2].filter((index) => index < top3.length);
+  const placeLabels = ["2e", "1er", "3e"];
+  const placeClasses = ["silver", "gold", "bronze"];
+  const heightClasses = ["is-second", "is-first", "is-third"];
+
+  return `
+    <section class="artists-podium-section artists-top10-section">
+      <div class="artists-podium-section__header">
+        <h4 class="artists-podium-section__title">Top 10 artistes</h4>
+      </div>
+      <div class="artists-podium">
+        ${podiumOrder.map((entryIndex, visualIndex) => {
+          const entry = top3[entryIndex];
+          const ratingsMeta = entry.ratings.length > 1
+            ? ` · moy. ${formatArtistRating(entry.averageRating)}`
+            : "";
+          const appearancesMeta = entry.ratedAppearances > 1
+            ? ` · ${entry.ratedAppearances} notes`
+            : " · 1 note";
+
+          return `
+            <article class="artists-podium__item ${heightClasses[visualIndex]} ${placeClasses[visualIndex]}">
+              <div class="artists-podium__card">
+                <div class="artists-podium__name">${escapeHtml(entry.name)}</div>
+                <div class="artists-podium__score">${escapeHtml(formatArtistRating(entry.bestRating))}</div>
+              </div>
+              <div class="artists-podium__base"></div>
+            </article>
+          `;
+        }).join("")}
+      </div>
+      ${rest.length ? `
+        <div class="artists-top10-rest">
+          <div class="artists-ranking-list">
+            ${rest.map((entry, index) => {
+              const averageMeta = entry.ratedAppearances > 1
+                ? `Moy. ${formatArtistRating(entry.averageRating)}`
+                : "Une seule note";
+              const notesMeta = `${entry.ratedAppearances} note${entry.ratedAppearances > 1 ? "s" : ""}`;
+              const eventsMeta = `${entry.eventCount} événement${entry.eventCount > 1 ? "s" : ""}`;
+
+              return `
+                <article class="artists-ranking-item">
+                  <div class="artists-ranking-item__rank">#${index + 4}</div>
+                  <div class="artists-ranking-item__main">
+                    <div class="artists-ranking-item__name">${escapeHtml(entry.name)}</div>
+                  </div>
+                  <div class="artists-ranking-item__score">${escapeHtml(formatArtistRating(entry.bestRating))}</div>
+                </article>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      ` : ""}
+    </section>
   `;
 }
 
@@ -1898,13 +2017,65 @@ function renderStats() {
       .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs)
     : [];
 
-  const countriesList = Array.from(uniqueCountriesMap.values()).sort((a, b) => a.localeCompare(b, "fr-FR"));
+  const artistsMap = new Map();
+  normalized.forEach((event) => {
+    const artists = normalizeLineup(event.lineup);
+    if (!artists.length) return;
+
+    artists.forEach((artist) => {
+      const key = artist.name.toLocaleLowerCase("fr-FR");
+      if (!artistsMap.has(key)) {
+        artistsMap.set(key, {
+          name: artist.name,
+          events: [],
+          ratings: []
+        });
+      }
+
+      const entry = artistsMap.get(key);
+      entry.events.push(event);
+      if (Number.isFinite(artist.rating)) {
+        entry.ratings.push(artist.rating);
+      }
+    });
+  });
+
+  const artistsList = Array.from(artistsMap.values()).map((entry) => ({
+    ...entry,
+    eventCount: entry.events.length,
+    ratedAppearances: entry.ratings.length,
+    bestRating: entry.ratings.length ? Math.max(...entry.ratings) : null,
+    averageRating: entry.ratings.length
+      ? entry.ratings.reduce((sum, rating) => sum + rating, 0) / entry.ratings.length
+      : null
+  }));
+  const topArtistEntry = artistsList.reduce((best, entry) => (
+    !best || entry.events.length > best.events.length ? entry : best
+  ), null);
+  const artistsPodiumMarkup = createArtistsPodiumMarkup(artistsList);
+  const lineupEvents = normalized
+    .filter((event) => normalizeLineup(event.lineup).length)
+    .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs);
+  const artistsGroupedByEvent = lineupEvents.map((event) => {
+    const artists = normalizeLineup(event.lineup);
+    const ratedCount = artists.filter((artist) => Number.isFinite(artist.rating)).length;
+
+    return {
+      title: `${event.title || "Événement"} (${new Date(event.startMs).getFullYear()})`,
+      meta: ` ${formatEventDateRange(event)}`,
+      items: artists.map((artist) => ({
+        title: artist.name,
+      }))
+    };
+  });
+
+  const countriesList = Array.from(uniqueCountriesMap.values());
   const countriesCoveragePct = uniqueCountriesMap.size ? (uniqueCountriesMap.size / TOTAL_COUNTRIES) * 100 : 0;
   const countriesGroupedByContinent = CONTINENT_ORDER
     .map((continent) => {
       const items = countriesList
         .filter((country) => getContinentForCountry(country) === continent)
-        .sort((a, b) => a.localeCompare(b, "fr-FR"))
+        
         .map((country) => ({
           title: titleCase(country)
         }));
@@ -1948,6 +2119,12 @@ function renderStats() {
   if (statsEls.topCountry) statsEls.topCountry.textContent = formatCountry(topCountry);
   if (statsEls.topCountryMeta) {
     statsEls.topCountryMeta.textContent = `${topCountryCount} événement${topCountryCount > 1 ? "s" : ""}`;
+  }
+  if (statsEls.artistsSeen) statsEls.artistsSeen.textContent = String(artistsList.length);
+  if (statsEls.artistsSeenMeta) {
+    statsEls.artistsSeenMeta.textContent = topArtistEntry
+      ? `${topArtistEntry.name} · ${topArtistEntry.events.length} apparition${topArtistEntry.events.length > 1 ? "s" : ""}${topArtistEntry.ratings.length ? ` · meilleure note ${formatArtistRating(Math.max(...topArtistEntry.ratings))}` : ""}`
+      : "Basé sur les lineups renseignés";
   }
   if (statsEls.years) statsEls.years.textContent = String(years.size);
   if (statsEls.breakdown) statsEls.breakdown.innerHTML = breakdownItems;
@@ -2009,6 +2186,15 @@ function renderStats() {
     )
   });
 
+  setStatDetail("artistsSeen", {
+    title: "Artistes vus",
+    subtitle: artistsList.length
+      ? `${artistsList.length} artiste${artistsList.length > 1 ? "s" : ""} unique${artistsList.length > 1 ? "s" : ""} réparti${artistsList.length > 1 ? "s" : ""} sur ${lineupEvents.length} événement${lineupEvents.length > 1 ? "s" : ""}`
+      : "Aucun lineup détecté",
+    html: createGroupedStatDetailList(artistsGroupedByEvent, {
+      introHtml: artistsPodiumMarkup
+    })
+  });
 
   bindStatCard(statCards.countries, "countries", "Afficher la liste des pays visités");
   bindStatCard(statCards.livedPlaces, "livedPlaces", "Afficher le détail des endroits vécus");
@@ -2018,6 +2204,7 @@ function renderStats() {
   bindStatCard(statCards.longest, "longest", "Afficher le détail du plus long trajet");
   bindStatCard(statCards.bestYear, "bestYear", "Afficher tous les événements de l'année la plus active");
   bindStatCard(statCards.topCountry, "topCountry", "Afficher les événements liés au pays le plus visité");
+  bindStatCard(statCards.artistsSeen, "artistsSeen", "Afficher la liste des artistes vus");
 }
 
 function getStepDateMs(step, fallbackDate) {

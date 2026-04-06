@@ -1538,3 +1538,217 @@ body.has-stats-modal-open {
   font-size: 12px;
   font-weight: 600;
 }
+
+
+.artists-podium-section {
+  margin-bottom: 22px;
+  padding: 18px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.84) 100%);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.artists-podium-section__header {
+  margin-bottom: 16px;
+}
+
+.artists-podium-section__title {
+  margin: 0;
+  font-size: 16px;
+  color: #f8fafc;
+}
+
+.artists-podium-section__subtitle {
+  margin: 6px 0 0;
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.artists-podium {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  align-items: end;
+}
+
+
+.artists-top10-rest {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.artists-podium__item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.artists-podium__card {
+  position: relative;
+  padding: 16px 14px;
+  border-radius: 18px 18px 14px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.24);
+}
+
+.artists-podium__place {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  width: fit-content;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.3);
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.artists-podium__name {
+  margin-top: 14px;
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.artists-podium__score {
+  margin-top: 8px;
+  color: #0f172a;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.artists-podium__meta {
+  margin-top: 8px;
+  color: rgba(15, 23, 42, 0.8);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.artists-podium__base {
+  width: 100%;
+  border-radius: 0 0 18px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 0;
+  background: rgba(15, 23, 42, 0.92);
+}
+
+.artists-podium__item.gold .artists-podium__card {
+  background: linear-gradient(180deg, #fef3c7 0%, #fbbf24 100%);
+}
+
+.artists-podium__item.silver .artists-podium__card {
+  background: linear-gradient(180deg, #e2e8f0 0%, #94a3b8 100%);
+}
+
+.artists-podium__item.bronze .artists-podium__card {
+  background: linear-gradient(180deg, #fed7aa 0%, #c2410c 100%);
+}
+
+.artists-podium__item.is-first .artists-podium__base {
+  min-height: 96px;
+}
+
+.artists-podium__item.is-second .artists-podium__base {
+  min-height: 62px;
+}
+
+.artists-podium__item.is-third .artists-podium__base {
+  min-height: 42px;
+}
+
+
+
+
+.artists-ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.artists-ranking-item {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  box-shadow: 0 8px 18px rgba(2, 6, 23, 0.18);
+}
+
+.artists-ranking-item__rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.14);
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.artists-ranking-item__main {
+  min-width: 0;
+}
+
+.artists-ranking-item__name {
+  color: #f8fafc;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.artists-ranking-item__meta {
+  margin-top: 4px;
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.artists-ranking-item__score {
+  justify-self: end;
+  color: #38bdf8;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .artists-podium {
+    grid-template-columns: 1fr;
+  }
+
+  .artists-podium__item {
+    order: initial;
+  }
+
+  .artists-podium__item.is-first .artists-podium__base,
+  .artists-podium__item.is-second .artists-podium__base,
+  .artists-podium__item.is-third .artists-podium__base {
+    min-height: 18px;
+  }
+
+  .artists-ranking-item {
+    grid-template-columns: 52px minmax(0, 1fr);
+  }
+
+  .artists-ranking-item__score {
+    grid-column: 2;
+    justify-self: start;
+  }
+}

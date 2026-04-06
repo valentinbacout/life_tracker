@@ -393,6 +393,12 @@ const rawTimelineEvents = [
     startDate: "2022-07-22",
     endDate: "2022-07-24",
     color: "#FF6A6E",
+    lineup: [
+      { name: "Damso", rating: 8.5 },
+      { name: "Orelsan", rating: 8.5 },
+      { name: "Rilès", rating: 7.5 },
+      { name: "Oboy", rating: 4 }, 
+       "Juliette Armanet", "Izïa"],
     city: "Aulnoye-Aymeries",
     country: "France",
     latitude: 50.19531093953841,
@@ -403,6 +409,12 @@ const rawTimelineEvents = [
     category: "event",
     startDate: "2022-08-26",
     color: "#FF6A6E",
+    lineup: [
+      { name: "PLK", rating: 9.5 },
+      { name: "Soso Maness", rating: 8 },
+      { name: "Zola", rating: 7 },
+      { name: "Koba la D", rating: 4 },
+      "ZKR"],
     city: "Thuin",
     country: "Belgique",
     latitude: 50.36560588145243,
@@ -435,6 +447,11 @@ const rawTimelineEvents = [
     category: "event",
     startDate: "2023-06-30",
     color: "#FF6A6E",
+    lineup: [
+    { name: "Damso", rating: 7 },
+    { name: "Marron 5", rating: 9.25 },
+    { name: "Tiakola", rating: 5 },
+    "Kungs", "Izïa", "Anna Calvi", "Calum Scott", "City and colour"],
     city: "Arras",
     country: "France",
     latitude: 50.28280444472462,
@@ -443,8 +460,12 @@ const rawTimelineEvents = [
   {
     title: "Festival Nuits Secrètes",
     category: "event",
-    startDate: "2023-07-21",
+    startDate: "2023-07-23",
     color: "#FF6A6E",
+    lineup: [
+      { name: "Lorenzo", rating: 8.75 },
+      { name: "Lomepal", rating: 7 },
+      "Sofiane Pamart", "Pomme"],
     city: "Aulnoye-Aymeries",
     country: "France",
     latitude: 50.19531093953841,
@@ -456,6 +477,7 @@ const rawTimelineEvents = [
     startDate: "2023-07-30",
     description: "GP Formule 1",
     color: "#F1D60A",
+    lineup: ["Lost Frequencies"],
     city: "Francorchamps",
     country: "Belgique",
     latitude: 50.438249714596864,
@@ -497,6 +519,7 @@ const rawTimelineEvents = [
     startDate: "2024-07-28",
     description: "GP Formule 1",
     color: "#F1D60A",
+    lineup: ["Dimitri Vegas"],
     city: "Francorchamps",
     country: "Belgique",
     latitude: 50.438249714596864,
@@ -514,6 +537,7 @@ const rawTimelineEvents = [
     category: "event",
     startDate: "2024-09-06",
     color: "#FF6A6E",
+    lineup: ["Martin Solveig", "Synapson"],
     city: "Comines",
     country: "France",
     latitude: 50.76539278791491,
@@ -595,6 +619,7 @@ const rawTimelineEvents = [
     category: "event",
     startDate: "2026-04-25",
     color: "#6E787A",
+    lineup: ["Damso"],
     city: "Nice",
     country: "France",
     latitude: 43.67858911814832,
@@ -1125,6 +1150,17 @@ const rawTimelineEvents = [
     latitude: 45.237970159216964,
     longitude: 1.337997294703146
   },
+    {
+    title: "Ayen",
+    category: "travel",
+    startDate: "2019-07-15",
+    endDate: "2019-08-07",
+    color: "#22a6b3",
+    city: "Ayen",
+    country: "France",
+    latitude: 45.237970159216964,
+    longitude: 1.337997294703146
+  },
   {
     title: "Ski",
     category: "travel",
@@ -1150,7 +1186,7 @@ const rawTimelineEvents = [
     title: "Sud de la France",
     category: "travel",
     startDate: "2020-07-04",
-    endDate: "2020-08-02",
+    endDate: "2020-08-08",
     color: "#2FD866",
     steps: [
       {
@@ -1193,30 +1229,20 @@ const rawTimelineEvents = [
         latitude: 43.69884242385637,
         longitude: 1.8174304757497692
       },
+        {
+        title: "Ayen",
+        category: "travel",
+        startDate: "2020-08-03",
+        endDate: "2020-08-08",
+        color: "#22a6b3",
+        city: "Ayen",
+        country: "France",
+        latitude: 45.237970159216964,
+        longitude: 1.337997294703146
+      },
     ]
   },
-  {
-    title: "Ayen",
-    category: "travel",
-    startDate: "2020-08-03",
-    endDate: "2020-08-08",
-    color: "#22a6b3",
-    city: "Ayen",
-    country: "France",
-    latitude: 45.237970159216964,
-    longitude: 1.337997294703146
-  },
-  {
-    title: "Ayen",
-    category: "travel",
-    startDate: "2019-07-15",
-    endDate: "2019-08-07",
-    color: "#22a6b3",
-    city: "Ayen",
-    country: "France",
-    latitude: 45.237970159216964,
-    longitude: 1.337997294703146
-  },
+
   {
     title: "Été à Toulouse",
     category: "travel",
