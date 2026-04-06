@@ -1135,7 +1135,15 @@ function createStatDetailList(items = [], options = {}) {
     <div class="${listClassName}">
       ${items.map((item) => {
     const title = escapeHtml(item.title || "Sans titre");
-    const meta = item.meta ? `<div class="stats-detail-item__meta">${escapeHtml(item.meta)}</div>` : "";
+    const meta = item.meta ? `
+<div class="stats-detail-item__meta">
+  ${item.chips && item.chips.length
+        ? `<span class="stats-detail-item__event">${escapeHtml(item.chips[0])}</span>`
+        : ""
+      }
+  <span class="stats-detail-item__meta-text">${escapeHtml(item.meta)}</span>
+</div>
+    ` : "";
     const chips = "";
     const action = "";
 
