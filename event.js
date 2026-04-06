@@ -136,9 +136,10 @@ const rawTimelineEvents = [
     longitude: 3.6871139758649445
   },
   {
-    title: "Briançon (lycée)",
+    title: "Sortie Briançon",
     category: "education",
     startDate: "2018-10-01",
+    endDate: "2018-10-05",
     details: "Déplacement scolaire",
     color: "#2FD866",
     city: "Briançon",
@@ -181,7 +182,6 @@ const rawTimelineEvents = [
     category: "education",
     startDate: "2022-09-05",
     endDate: "2023-01-20",
-    description: "Bron, France",
     color: "#EB7D20",
     city: "Bron",
     country: "France",
@@ -1312,8 +1312,9 @@ const rawTimelineEvents = [
     category: "association",
     startDate: "2022-05-02",
     endDate: "2022-05-06",
-    description: "VS Caristocrates",
+    details: "VS Caristocrates",
     color: "#5F1696",
+    youtubeUrl: "https://www.youtube.com/watch?v=XYFgU-wVLu4&t=3s",
   },
   {
     title: "Mandat BDE",
