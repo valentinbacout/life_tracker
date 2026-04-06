@@ -99,6 +99,7 @@ function normalizeEvents(inputEvents) {
     const normalized = { ...event };
 
     normalized.description = normalized.description ?? normalized.desc ?? "";
+    normalized.details = normalized.details ?? normalized.detail ?? normalized.longDescription ?? "";
     normalized.category = normalized.category || normalized.type || "personal";
 
     const usesNewSchema = normalized.startDate !== undefined || normalized.endDate !== undefined;
@@ -740,9 +741,9 @@ function renderDrawerContent(event) {
     </div>
     <h2 class="event-drawer__title" id="event-drawer-title">${escapeHtml(event.title || "Sans titre")}</h2>
     ${location ? `<p class="event-drawer__location">📍 ${escapeHtml(location)}</p>` : ""}
-${event.description ? `
+${event.details ? `
   <div class="event-drawer__section">
-    <p>${escapeHtml(event.description)}</p>
+    <p>${escapeHtml(event.details)}</p>
   </div>
 ` : ""}
     ${embedUrl ? `

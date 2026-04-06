@@ -194,6 +194,8 @@ const rawTimelineEvents = [
     startDate: "2023-09-15",
     endDate: "2024-02-15",
     color: "#22a6b3",
+    details: "Étude de la capacité d’absorption de différentes structures lattices hybrides avec des gradients de réseaux",
+
   },
   {
     title: "Projet VINCI",
@@ -201,6 +203,7 @@ const rawTimelineEvents = [
     startDate: "2023-12-03",
     endDate: "2024-02-15",
     color: "#22a6b3",
+    details: "Conception et prototypage d’un système de couplage permettant de former un train de chariots médicaux (preuve de concept).",
   },
   {
     title: "Stage Joubert Group",
@@ -279,7 +282,7 @@ const rawTimelineEvents = [
     title: "Diplôme d'Ingénieur",
     category: "education",
     startDate: "2024-09-03",
-    description: "ME, CIM, VINCI",
+    details: "Spécialité ME (Mécanique Énergétique), Axe CIM (Conception Intégrée en Mécanique), Parcours VINCI (Visualisation et Ingénierie Numérique pour la Conception et l'Innovation)",
     color: "#DD2517",
   },
   {
@@ -425,7 +428,14 @@ const rawTimelineEvents = [
     city: "Francorchamps",
     country: "Belgique",
     latitude: 50.438249714596864,
-    longitude: 5.970471274786538
+    longitude: 5.970471274786538,
+    gallery: [
+      {
+        src: "images/spacircuit24.png",
+        alt: "SPA Francorchamps",
+        caption: "SPA Francorchamps"
+      },
+    ]
   },
   {
     title: "SK'INSA",
@@ -459,7 +469,14 @@ const rawTimelineEvents = [
     city: "Francorchamps",
     country: "Belgique",
     latitude: 50.438249714596864,
-    longitude: 5.970471274786538
+    longitude: 5.970471274786538,
+    gallery: [
+      {
+        src: "images/spacircuit24.png",
+        alt: "SPA Francorchamps",
+        caption: "SPA Francorchamps"
+      },
+    ]
   },
   {
     title: "Gala INSA HDF",
@@ -1277,11 +1294,11 @@ const rawTimelineEvents = [
     youtubeUrl: "https://youtu.be/-bzoR3Ta0uU?si=9kBjnCR8j9rvlv-X"
   },
   {
-    title: "WEI",
+    title: "WEI 5A",
     category: "association",
     startDate: "2023-09-01",
     color: "#DD2517",
-    description: "Organisé par INS'Avengers",
+    details: "Organisé par INS'Avengers",
   },
   {
     title: "Seigneurs des Caribous",
