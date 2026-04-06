@@ -729,10 +729,120 @@ function normalizeGalleryItems(gallery) {
     }));
 }
 
+function flattenStepTree(steps, options = {}) {
+  if (!Array.isArray(steps) || !steps.length) return [];
+
+  const includeContainersWithoutCoordinates = options.includeContainersWithoutCoordinates ?? false;
+  const returnToParentAfterChildren = options.returnToParentAfterChildren ?? false;
+  const parentPath = Array.isArray(options.parentPath) ? options.parentPath : [];
+  const parentDate = options.parentDate;
+  const parentColor = options.parentColor;
+  const parentCategory = options.parentCategory;
+  const parentTitle = options.parentTitle || "";
+
+  const flattened = [];
+
+  steps.forEach((step, index) => {
+    if (!step || typeof step !== "object") return;
+
+    const lat = Number(step.latitude);
+    const lng = Number(step.longitude);
+    const hasCoordinates = Number.isFinite(lat) && Number.isFinite(lng);
+    const dates = getStepDateMs(step, parentDate);
+    const stepPath = [...parentPath, index];
+    const stepTitle = step.title || step.city || parentTitle || "Étape";
+    const nestedSteps = Array.isArray(step.steps) ? step.steps : [];
+
+    const createFlatStep = (sourceStep, extra = {}) => ({
+      ...sourceStep,
+      ...extra,
+      latitude: hasCoordinates ? lat : sourceStep.latitude,
+      longitude: hasCoordinates ? lng : sourceStep.longitude,
+      startMs: dates.startMs,
+      endMs: dates.endMs,
+      visualType: sourceStep.endDate ? "range" : "point",
+      _path: stepPath,
+      _hasCoordinates: hasCoordinates,
+      _level: parentPath.length,
+      _stepTitle: stepTitle,
+      _parentTitle: parentTitle || "",
+      _inheritedColor: sourceStep.color || parentColor,
+      _inheritedCategory: getMapCategory(sourceStep, parentCategory)
+    });
+
+    if (hasCoordinates || includeContainersWithoutCoordinates) {
+      flattened.push(createFlatStep(step));
+    }
+
+    if (nestedSteps.length) {
+      flattened.push(
+        ...flattenStepTree(nestedSteps, {
+          includeContainersWithoutCoordinates,
+          returnToParentAfterChildren,
+          parentPath: stepPath,
+          parentDate: step.date ?? step.startDate ?? parentDate,
+          parentColor: step.color || parentColor,
+          parentCategory: getMapCategory(step, parentCategory),
+          parentTitle: stepTitle
+        })
+      );
+
+      if (returnToParentAfterChildren && hasCoordinates) {
+        flattened.push(createFlatStep(step, {
+          _returnsToParent: true,
+          _stepTitle: `${stepTitle} (retour)`
+        }));
+      }
+    }
+  });
+
+  return flattened;
+}
+
+function createStepTreeMarkup(steps, fallbackDate, depth = 0) {
+  if (!Array.isArray(steps) || !steps.length) return "";
+
+  return `
+    <ul class="event-steps-list${depth > 0 ? " event-steps-list--nested" : ""}">
+      ${steps.map((step) => {
+        if (!step || typeof step !== "object") return "";
+
+        const dates = getStepDateMs(step, fallbackDate);
+        const title = step.title || step.city || "Étape";
+        const location = [step.city, step.country].filter(Boolean).join(", ");
+        const childrenMarkup = createStepTreeMarkup(
+          step.steps,
+          step.date ?? step.startDate ?? fallbackDate,
+          depth + 1
+        );
+
+        return `
+          <li class="event-steps-list__item">
+            <div class="event-steps-list__card">
+              <div class="event-steps-list__header">
+                <span class="event-steps-list__title">${escapeHtml(title)}</span>
+                <span class="event-steps-list__date">${escapeHtml(
+                  step.endDate
+                    ? `${formatFullDate(dates.startMs)} — ${formatFullDate(dates.endMs)}`
+                    : formatFullDate(dates.startMs)
+                )}</span>
+              </div>
+              ${location ? `<div class="event-steps-list__meta">📍 ${escapeHtml(location)}</div>` : ""}
+              ${step.description ? `<div class="event-steps-list__meta">${escapeHtml(step.description)}</div>` : ""}
+              ${childrenMarkup}
+            </div>
+          </li>
+        `;
+      }).join("")}
+    </ul>
+  `;
+}
+
 function renderDrawerContent(event) {
   const location = getEventLocation(event);
   const embedUrl = normalizeYoutubeEmbed(event.youtubeUrl || event.youtube || event.videoUrl || "");
   const galleryItems = normalizeGalleryItems(event.gallery || event.photos || event.images);
+  const stepsMarkup = createStepTreeMarkup(event.steps, event.startDate ?? event.startMs);
 
   drawerContentEl.innerHTML = `
     <div class="drawer-meta-badges">
@@ -764,6 +874,11 @@ ${event.details ? `
             </figure>
           `).join("")}
         </div>
+      </div>` : ""}
+    ${stepsMarkup ? `
+      <div class="event-drawer__section">
+        <h3>Étapes</h3>
+        ${stepsMarkup}
       </div>` : ""}
   `;
 }
@@ -1010,6 +1125,71 @@ function titleCase(value) {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+
+const COUNTRY_TO_CONTINENT = {
+  "france": "Europe",
+  "belgique": "Europe",
+  "monaco": "Europe",
+  "luxembourg": "Europe",
+  "pays-bas": "Europe",
+  "angleterre": "Europe",
+  "royaume-uni": "Europe",
+  "espagne": "Europe",
+  "italie": "Europe",
+  "malte": "Europe",
+  "danemark": "Europe",
+  "suede": "Europe",
+  "finlande": "Europe",
+  "russie": "Europe",
+  "estonie": "Europe",
+  "hongrie": "Europe",
+  "slovaquie": "Europe",
+  "autriche": "Europe",
+  "republique tcheque": "Europe",
+  "tchequie": "Europe",
+  "allemagne": "Europe",
+  "suisse": "Europe",
+  "vatican": "Europe",
+  "malaisie": "Asie",
+  "singapour": "Asie",
+  "emirats arabes unis": "Asie"
+};
+
+const CONTINENT_ORDER = ["Europe", "Asie", "Afrique", "Amérique du Nord", "Amérique du Sud", "Océanie", "Autres"];
+const CONTINENT_TOTAL_COUNTRIES = {
+  // Valeurs configurables pour calculer le taux de couverture par continent.
+  // Tu peux ajuster Europe à 27 si tu veux raisonner en mode UE plutôt que continent géographique.
+  "Europe": 27,
+  "Asie": 49,
+  "Afrique": 54,
+  "Amérique du Nord": 23,
+  "Amérique du Sud": 12,
+  "Océanie": 14,
+  "Autres": 0
+};
+
+function normalizeCountryKey(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[’']/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function getContinentForCountry(country) {
+  const key = normalizeCountryKey(country);
+  return COUNTRY_TO_CONTINENT[key] || "Autres";
+}
+
+function formatPercent(value, digits = 1) {
+  return new Intl.NumberFormat("fr-FR", {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits
+  }).format(Number(value) || 0);
+}
+
 function formatLocationLabel(item = {}) {
   const city = item.city ? String(item.city).trim() : "";
   const country = item.country ? String(item.country).trim() : "";
@@ -1164,6 +1344,28 @@ function createStatDetailList(items = [], options = {}) {
   `;
 }
 
+
+function createGroupedStatDetailList(groups = []) {
+  const visibleGroups = groups.filter((group) => Array.isArray(group.items) && group.items.length);
+  if (!visibleGroups.length) {
+    return '<p class="stats-detail-empty">Aucun détail disponible.</p>';
+  }
+
+  return `
+    <div class="stats-detail-groups">
+      ${visibleGroups.map((group) => `
+        <section class="stats-detail-group">
+          <div class="stats-detail-group__header">
+            <h4 class="stats-detail-group__title">${escapeHtml(group.title || "Général")}</h4>
+            ${group.meta ? `<span class="stats-detail-group__meta">${escapeHtml(group.meta)}</span>` : ""}
+          </div>
+          ${createStatDetailList(group.items, { compact: true })}
+        </section>
+      `).join("")}
+    </div>
+  `;
+}
+
 function ensureStatsModal() {
   if (statsModalEl) return;
 
@@ -1276,10 +1478,7 @@ function renderStats() {
     };
 
     pushLocation(event);
-
-    if (Array.isArray(event.steps)) {
-      event.steps.forEach((step) => pushLocation(step));
-    }
+    flattenStepTree(event.steps, { parentDate: event.startDate ?? event.startMs }).forEach((step) => pushLocation(step));
 
     return locations;
   };
@@ -1407,20 +1606,24 @@ function renderStats() {
   };
 
   const getDistanceOccurrences = (event, otherEvents = []) => {
-    const stepNodes = Array.isArray(event.steps)
-      ? event.steps
-        .map((step, index) => normalizeDistanceNode(step, event.startDate ?? event.startMs, event.title, {
-          stepIndex: index,
-          stepType: step?.type || "step"
-        }))
-        .filter(Boolean)
-        .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs || a.stepIndex - b.stepIndex)
-        .filter((node, index, array) => {
-          if (index === 0) return true;
-          const prev = array[index - 1];
-          return !(prev.lat === node.lat && prev.lon === node.lon && prev.startMs === node.startMs && prev.endMs === node.endMs);
-        })
-      : [];
+    const stepNodes = flattenStepTree(event.steps, {
+      parentDate: event.startDate ?? event.startMs,
+      parentColor: event.color,
+      parentCategory: event.category,
+      parentTitle: event.title,
+      returnToParentAfterChildren: true
+    })
+      .map((step, index) => normalizeDistanceNode(step, event.startDate ?? event.startMs, event.title, {
+        stepIndex: index,
+        stepPath: Array.isArray(step._path) ? [...step._path] : [],
+        stepType: step?.type || "step"
+      }))
+      .filter(Boolean)
+      .filter((node, index, array) => {
+        if (index === 0) return true;
+        const prev = array[index - 1];
+        return !(prev.lat === node.lat && prev.lon === node.lon && prev.startMs === node.startMs && prev.endMs === node.endMs);
+      });
 
     if (stepNodes.length) {
       const hasInterferingEventBetween = (leftMs, rightMs) => {
@@ -1696,6 +1899,30 @@ function renderStats() {
     : [];
 
   const countriesList = Array.from(uniqueCountriesMap.values()).sort((a, b) => a.localeCompare(b, "fr-FR"));
+  const countriesCoveragePct = uniqueCountriesMap.size ? (uniqueCountriesMap.size / TOTAL_COUNTRIES) * 100 : 0;
+  const countriesGroupedByContinent = CONTINENT_ORDER
+    .map((continent) => {
+      const items = countriesList
+        .filter((country) => getContinentForCountry(country) === continent)
+        .sort((a, b) => a.localeCompare(b, "fr-FR"))
+        .map((country) => ({
+          title: titleCase(country)
+        }));
+
+      const continentTotal = CONTINENT_TOTAL_COUNTRIES[continent] || 0;
+      const continentCoveragePct = continentTotal > 0
+        ? (items.length / continentTotal) * 100
+        : 0;
+
+      return {
+        title: continent,
+        meta: continentTotal > 0
+          ? `${items.length} pays · ${formatPercent(continentCoveragePct)} %`
+          : `${items.length} pays`,
+        items
+      };
+    })
+    .filter((group) => group.items.length);
   const citiesList = Array.from(uniqueCitiesMap.values()).sort((a, b) => formatLocationLabel(a).localeCompare(formatLocationLabel(b), "fr-FR"));
   const livedPlacesList = Array.from(uniqueLivedPlacesMap.values()).sort((a, b) => formatLocationLabel(a).localeCompare(formatLocationLabel(b), "fr-FR"));
   const eventLookup = new Map(normalized.map((event) => [event.id, event]));
@@ -1704,7 +1931,7 @@ function renderStats() {
     .filter((event) => event.category === "living_place")
     .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs);
   if (statsEls.livedPlaces) statsEls.livedPlaces.textContent = String(uniqueLivedPlacesMap.size);
-  if (statsEls.countries) statsEls.countries.textContent = `${uniqueCountriesMap.size} / ${TOTAL_COUNTRIES}`;
+  if (statsEls.countries) statsEls.countries.textContent = `${uniqueCountriesMap.size} (${formatPercent(countriesCoveragePct)} %)`;
   if (statsEls.cities) statsEls.cities.textContent = String(uniqueCitiesMap.size);
   if (statsEls.travels) statsEls.travels.textContent = String(travelEvents.length);
   if (statsEls.distance) statsEls.distance.textContent = `${Math.round(totalDistance)} km`;
@@ -1726,14 +1953,9 @@ function renderStats() {
   if (statsEls.breakdown) statsEls.breakdown.innerHTML = breakdownItems;
 
   setStatDetail("countries", {
-    title: "Pays visités",
-    subtitle: `${countriesList.length} pays distincts référencés dans la timeline`,
-    html: createStatDetailList(
-      countriesList.map((country) => ({
-        title: titleCase(country)
-      })),
-      { compact: true }
-    )
+    title: "Pays visités — Général",
+    subtitle: `${countriesList.length} pays / ${TOTAL_COUNTRIES} · ${formatPercent(countriesCoveragePct)} % du monde`,
+    html: createGroupedStatDetailList(countriesGroupedByContinent)
   });
 
 
@@ -1843,48 +2065,47 @@ function getEventMapPoints(event) {
     });
   }
 
-  if (Array.isArray(event.steps)) {
-    event.steps.forEach((step, index) => {
-      const lat = Number(step.latitude);
-      const lng = Number(step.longitude);
+  flattenStepTree(event.steps, {
+    parentDate: event.startDate,
+    parentColor: event.color,
+    parentCategory: getMapCategory(event, event.category),
+    parentTitle: event.title
+  }).forEach((step) => {
+    if (!step._hasCoordinates) return;
 
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-
-      const dates = getStepDateMs(step, event.startDate);
-
-      points.push({
-        id: `${event.id}__step_${index}`,
-        parentEventId: event.id,
-        kind: "step",
-        stepType: step.type || "step",
-        title: step.title || step.city || event.title,
-        description: step.description || "",
-        visualType: step.endDate ? "range" : "point",
-        startMs: dates.startMs,
-        endMs: dates.endMs,
-        category: event.category,
-        mapCategory: getMapCategory(step, getMapCategory(event, event.category)),
-        color: step.color || event.color,
-        city: step.city,
-        country: step.country,
-        latitude: lat,
-        longitude: lng
-      });
+    points.push({
+      id: `${event.id}__step_${step._path.join("_")}`,
+      parentEventId: event.id,
+      kind: "step",
+      stepType: step.type || "step",
+      title: step._stepTitle || step.title || step.city || event.title,
+      description: step.description || "",
+      visualType: step.visualType,
+      startMs: step.startMs,
+      endMs: step.endMs,
+      category: event.category,
+      mapCategory: getMapCategory(step, getMapCategory(event, event.category)),
+      color: step.color || step._inheritedColor || event.color,
+      city: step.city,
+      country: step.country,
+      latitude: Number(step.latitude),
+      longitude: Number(step.longitude)
     });
-  }
+  });
 
   return points;
 }
 
 function getEventRoutePoints(event, activeCategoriesSet = getActiveCategories()) {
-  if (!Array.isArray(event.steps)) return [];
-
-  return event.steps
+  return flattenStepTree(event.steps, {
+    parentDate: event.startDate,
+    parentColor: event.color,
+    parentCategory: getMapCategory(event, event.category),
+    parentTitle: event.title,
+    returnToParentAfterChildren: true
+  })
     .filter((step) => {
-      const lat = Number(step.latitude);
-      const lng = Number(step.longitude);
-
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+      if (!step._hasCoordinates) return false;
 
       const stepCategory = getMapCategory(step, getMapCategory(event, event.category));
       return activeCategoriesSet.has(stepCategory);

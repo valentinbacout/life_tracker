@@ -782,6 +782,7 @@ const rawTimelineEvents = [
       {
         category: "travel",
         color: "#0051ff",
+        Date: "2013-10-29",
         city: "Savone",
         country: "Italie",
         latitude: 44.315038428721074,
@@ -790,14 +791,34 @@ const rawTimelineEvents = [
       {
         category: "travel",
         color: "#0051ff",
-        city: "Rome",
+        Date: "2013-10-30",
+        city: "Civitaveccia",
         country: "Italie",
         latitude: 42.094052397925836,
-        longitude: 11.778228789255637
+        longitude: 11.778228789255637,
+        steps: [
+          {
+            category: "travel",
+            color: "#0051ff",
+            city: "Rome",
+            country: "Italie",
+            latitude: 41.890297919515575,
+            longitude: 12.49135343737464
+          },
+          {
+            category: "travel",
+            color: "#0051ff",
+            city: "Cité du Vatican",
+            country: "Vatican",
+            latitude: 41.902916,
+            longitude: 12.453389
+          },
+        ]
       },
       {
         category: "travel",
         color: "#0051ff",
+        Date: "2013-10-31",
         city: "Palerme",
         country: "Italie",
         latitude: 38.12697100848982,
@@ -806,6 +827,7 @@ const rawTimelineEvents = [
       {
         category: "travel",
         color: "#0051ff",
+        Date: "2013-11-02",
         city: "Valence",
         country: "Espagne",
         latitude: 39.46131733250623,
@@ -814,6 +836,7 @@ const rawTimelineEvents = [
       {
         category: "travel",
         color: "#0051ff",
+        Date: "2013-11-03",
         city: "Palma",
         country: "Espagne",
         latitude: 39.55562174277503,
@@ -822,6 +845,7 @@ const rawTimelineEvents = [
       {
         category: "travel",
         color: "#0051ff",
+        Date: "2013-11-03",
         city: "Marseille",
         country: "France",
         latitude: 43.34432699124567,
@@ -928,10 +952,28 @@ const rawTimelineEvents = [
       {
         category: "travel",
         color: "#ffc400",
-        city: "Pise",
+        city: "La Spezia",
         country: "Italie",
-        latitude: 43.55313835882257,
-        longitude: 10.29656634026772
+        latitude: 44.106488124961736,
+        longitude: 9.83090721342693,
+        steps: [
+          {
+            category: "travel",
+            color: "#ffc400",
+            city: "Florence",
+            country: "Italie",
+            latitude: 43.77229097898343,
+            longitude: 11.255586772537738
+          },
+          {
+            category: "travel",
+            color: "#ffc400",
+            city: "Pise",
+            country: "Italie",
+            latitude: 43.72307332531572,
+            longitude: 10.395745963112049
+          },
+        ]
       },
       {
         category: "travel",
