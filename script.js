@@ -1410,13 +1410,12 @@ function createGroupedStatDetailList(groups = [], options = {}) {
 
 function rankArtistsByRating(entries = []) {
   return entries
-    .filter((entry) => entry && Number.isFinite(entry.bestRating))
+    .filter((entry) => entry && Number.isFinite(entry.rating))
     .sort((a, b) => (
-      b.bestRating - a.bestRating
-      || b.averageRating - a.averageRating
-      || b.ratedAppearances - a.ratedAppearances
-      || b.eventCount - a.eventCount
+      b.rating - a.rating
+      || (b.eventYear || 0) - (a.eventYear || 0)
       || a.name.localeCompare(b.name, "fr-FR")
+      || (a.eventTitle || "").localeCompare(b.eventTitle || "", "fr-FR")
     ));
 }
 
@@ -1428,7 +1427,6 @@ function createArtistsPodiumMarkup(entries = []) {
   const top3 = rankedEntries.slice(0, 3);
   const rest = rankedEntries.slice(3, 10);
   const podiumOrder = [1, 0, 2].filter((index) => index < top3.length);
-  const placeLabels = ["2e", "1er", "3e"];
   const placeClasses = ["silver", "gold", "bronze"];
   const heightClasses = ["is-second", "is-first", "is-third"];
 
@@ -1440,18 +1438,14 @@ function createArtistsPodiumMarkup(entries = []) {
       <div class="artists-podium">
         ${podiumOrder.map((entryIndex, visualIndex) => {
           const entry = top3[entryIndex];
-          const ratingsMeta = entry.ratings.length > 1
-            ? ` · moy. ${formatArtistRating(entry.averageRating)}`
-            : "";
-          const appearancesMeta = entry.ratedAppearances > 1
-            ? ` · ${entry.ratedAppearances} notes`
-            : " · 1 note";
+          const eventLabel = [entry.eventTitle, entry.eventYear].filter(Boolean).join(" — ");
 
           return `
             <article class="artists-podium__item ${heightClasses[visualIndex]} ${placeClasses[visualIndex]}">
               <div class="artists-podium__card">
                 <div class="artists-podium__name">${escapeHtml(entry.name)}</div>
-                <div class="artists-podium__score">${escapeHtml(formatArtistRating(entry.bestRating))}</div>
+                <div class="artists-podium__event">${escapeHtml(eventLabel)}</div>
+                <div class="artists-podium__score">${escapeHtml(formatArtistRating(entry.rating))}</div>
               </div>
               <div class="artists-podium__base"></div>
             </article>
@@ -1462,19 +1456,16 @@ function createArtistsPodiumMarkup(entries = []) {
         <div class="artists-top10-rest">
           <div class="artists-ranking-list">
             ${rest.map((entry, index) => {
-              const averageMeta = entry.ratedAppearances > 1
-                ? `Moy. ${formatArtistRating(entry.averageRating)}`
-                : "Une seule note";
-              const notesMeta = `${entry.ratedAppearances} note${entry.ratedAppearances > 1 ? "s" : ""}`;
-              const eventsMeta = `${entry.eventCount} événement${entry.eventCount > 1 ? "s" : ""}`;
+              const eventLabel = [entry.eventTitle, entry.eventYear].filter(Boolean).join(" — ");
 
               return `
                 <article class="artists-ranking-item">
                   <div class="artists-ranking-item__rank">#${index + 4}</div>
                   <div class="artists-ranking-item__main">
                     <div class="artists-ranking-item__name">${escapeHtml(entry.name)}</div>
+                    <div class="artists-ranking-item__event">${escapeHtml(eventLabel)}</div>
                   </div>
-                  <div class="artists-ranking-item__score">${escapeHtml(formatArtistRating(entry.bestRating))}</div>
+                  <div class="artists-ranking-item__score">${escapeHtml(formatArtistRating(entry.rating))}</div>
                 </article>
               `;
             }).join("")}
@@ -2049,10 +2040,21 @@ function renderStats() {
       ? entry.ratings.reduce((sum, rating) => sum + rating, 0) / entry.ratings.length
       : null
   }));
-  const topArtistEntry = artistsList.reduce((best, entry) => (
-    !best || entry.events.length > best.events.length ? entry : best
-  ), null);
-  const artistsPodiumMarkup = createArtistsPodiumMarkup(artistsList);
+  const ratedArtistPerformances = normalized.flatMap((event) => (
+    normalizeLineup(event.lineup)
+      .filter((artist) => Number.isFinite(artist.rating))
+      .map((artist) => ({
+        name: artist.name,
+        rating: artist.rating,
+        eventTitle: event.title || "Événement",
+        eventYear: new Date(event.startMs).getFullYear(),
+        eventId: event.id,
+        date: event.startMs
+      }))
+  ));
+  const rankedArtistPerformances = rankArtistsByRating(ratedArtistPerformances);
+  const topArtistEntry = rankedArtistPerformances[0] || null;
+  const artistsPodiumMarkup = createArtistsPodiumMarkup(rankedArtistPerformances);
   const lineupEvents = normalized
     .filter((event) => normalizeLineup(event.lineup).length)
     .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs);
@@ -2123,7 +2125,7 @@ function renderStats() {
   if (statsEls.artistsSeen) statsEls.artistsSeen.textContent = String(artistsList.length);
   if (statsEls.artistsSeenMeta) {
     statsEls.artistsSeenMeta.textContent = topArtistEntry
-      ? `${topArtistEntry.name} · ${topArtistEntry.events.length} apparition${topArtistEntry.events.length > 1 ? "s" : ""}${topArtistEntry.ratings.length ? ` · meilleure note ${formatArtistRating(Math.max(...topArtistEntry.ratings))}` : ""}`
+      ? `${topArtistEntry.name} · ${topArtistEntry.eventTitle} (${topArtistEntry.eventYear}) · ${formatArtistRating(topArtistEntry.rating)}`
       : "Basé sur les lineups renseignés";
   }
   if (statsEls.years) statsEls.years.textContent = String(years.size);
@@ -2189,7 +2191,7 @@ function renderStats() {
   setStatDetail("artistsSeen", {
     title: "Artistes vus",
     subtitle: artistsList.length
-      ? `${artistsList.length} artiste${artistsList.length > 1 ? "s" : ""} unique${artistsList.length > 1 ? "s" : ""} réparti${artistsList.length > 1 ? "s" : ""} sur ${lineupEvents.length} événement${lineupEvents.length > 1 ? "s" : ""}`
+      ? `${artistsList.length} artiste${artistsList.length > 1 ? "s" : ""} unique${artistsList.length > 1 ? "s" : ""} · ${rankedArtistPerformances.length} performance${rankedArtistPerformances.length > 1 ? "s" : ""} notée${rankedArtistPerformances.length > 1 ? "s" : ""} sur ${lineupEvents.length} événement${lineupEvents.length > 1 ? "s" : ""}`
       : "Aucun lineup détecté",
     html: createGroupedStatDetailList(artistsGroupedByEvent, {
       introHtml: artistsPodiumMarkup
