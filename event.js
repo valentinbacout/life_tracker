@@ -394,7 +394,7 @@ const rawTimelineEvents = [
     endDate: "2022-07-24",
     color: "#FF6A6E",
     lineup: [
-      { name: "Damso", rating: 8.5 },
+      { name: "Damso", rating: 8.75 },
       { name: "Orelsan", rating: 8.5 },
       { name: "Rilès", rating: 7.5 },
       { name: "Oboy", rating: 4 }, 
@@ -448,7 +448,7 @@ const rawTimelineEvents = [
     startDate: "2023-06-30",
     color: "#FF6A6E",
     lineup: [
-    { name: "Damso", rating: 7 },
+    { name: "Damso", rating: 9 },
     { name: "Marron 5", rating: 9.25 },
     { name: "Tiakola", rating: 5 },
     "Kungs", "Izïa", "Anna Calvi", "Calum Scott", "City and colour"],
