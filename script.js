@@ -1680,7 +1680,10 @@ function createMiniBarsMarkup(entries = [], options = {}) {
     return '<p class="stat-visual-empty">Pas assez de données.</p>';
   }
 
-  const maxValue = Math.max(...entries.map((entry) => Number(entry.value) || 0), 1);
+  const customMaxValue = Number(options.maxValue);
+  const maxValue = Number.isFinite(customMaxValue) && customMaxValue > 0
+    ? customMaxValue
+    : Math.max(...entries.map((entry) => Number(entry.value) || 0), 1);
   const formatter = typeof options.valueFormatter === "function"
     ? options.valueFormatter
     : (value) => String(value);
@@ -2384,6 +2387,14 @@ function renderStats() {
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "fr-FR"))
     .slice(0, 3)
     .map(([label, value]) => ({ label, value, meta: `${value} occurrence${value > 1 ? "s" : ""}` }));
+  const countryContinentEntries = countriesGroupedByContinent
+    .map((group) => ({
+      label: group.title,
+      value: group.items.length,
+      totalCountries: CONTINENT_TOTAL_COUNTRIES[group.title] || group.items.length || 1,
+      meta: group.meta
+    }))
+    .slice(0, 3);
   const topCountriesBars = countryEntries.slice(0, 3).map(([country, value]) => ({
     label: formatCountry(country),
     value,
@@ -2401,11 +2412,14 @@ function renderStats() {
     { label: "Trajets", value: String(distanceDetailItems.length) },
     { label: "Plus long", value: `${Math.round(longestDistance)} km` }
   ]));
-  setVisualMarkup("stat-countries-visual", createMiniBarsMarkup(topCountriesBars, {
-    valueFormatter: (value) => `${value}`
+  setVisualMarkup("stat-countries-visual", createMiniBarsMarkup(countryContinentEntries, {
+    maxValue: Math.max(...countryContinentEntries.map((entry) => Number(entry.totalCountries) || 0), 1),
+    valueFormatter: (value, entry) => `${value}/${entry.totalCountries}`
   }));
   setVisualMarkup("stat-top-country-visual", topCountry
-    ? `${createKpiStripMarkup([{ label: "Événements", value: String(topCountryCount) }])}<div class="stat-hero-caption">${escapeHtml(topCountryShare)}</div>`
+    ? `${createMiniBarsMarkup(topCountriesBars, {
+        valueFormatter: (value) => `${value}`
+      })}<div class="stat-hero-caption">${escapeHtml(topCountryShare)}</div>`
     : '<p class="stat-visual-empty">Aucune donnée hors France.</p>');
   setVisualMarkup("stat-best-year-visual", createMiniBarsMarkup(bestYearsBars, {
     valueFormatter: (value) => `${value}`
