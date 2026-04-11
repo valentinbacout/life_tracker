@@ -318,7 +318,12 @@ const rawTimelineEvents = [
       startDate: "2025-03-22",
       color: "#DD2517",
     },
-
+  {
+      title: "Première Cryolipolyse",
+      category: "education",
+      startDate: "2026-04-09",
+      color: "#01B0DC",
+    },
   // PROJECTS
   {
       title: "Création Bricks Creations",
